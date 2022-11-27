@@ -14,11 +14,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.IntStream;
 
 @Service
 public class Statistics {
 
     private static final Logger log = LoggerFactory.getLogger(Statistics.class);
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     public void getWorldStatistics() {
         downloadFilesForLastYear();
@@ -28,23 +31,28 @@ public class Statistics {
         String urlString = "https://raw.githubusercontent.com/CSSEGISandData/" +
                 "COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/";
         String temp = urlString;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
-        String today = LocalDate.now().minusDays(1L).format(formatter);
-        log.info(today);
+        String day = LocalDate.now().minusDays(1L).format(formatter);
+        log.info(day);
 
         Path folder = Paths.get("src/main/resources/statistics/");
-        File file = new File(folder.toString());
+        File statisticsFolder = new File(folder.toString());
 
-        for (int i = 0; i < 3; i++) {
-            temp += today + ".csv";
+        for (int i = 0; i < 10; i++) {
+
+            temp += day + ".csv";
+
             try {
-                downloadFile(temp, folder + "/" + today + ".csv");
+                downloadFile(temp, folder + "/" + day + ".csv");
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error while downloading files from github: " + e);
+                continue;
             }
-            today = LocalDate.parse(today, formatter).minusDays(1L).format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+
+            day = LocalDate.parse(day, formatter).minusDays(1L).format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
             temp = urlString;
         }
+
+        removeExtraFilesInStatistics(statisticsFolder, day);
     }
 
     private void downloadFile(String urlStr, String file) throws IOException {
@@ -54,5 +62,17 @@ public class Statistics {
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
         rbc.close();
+    }
+
+    private void removeExtraFilesInStatistics(File statisticsFolder, String day) {
+        File[] listOfFiles = statisticsFolder.listFiles();
+        LocalDate lastDayFromNow = LocalDate.parse(day, formatter);
+
+        IntStream.range(0, listOfFiles.length)
+                .filter(i -> listOfFiles[i].getName().charAt(0) != 'R' &&
+                        lastDayFromNow.isAfter(LocalDate.parse(listOfFiles[i].getName()
+                        .substring(0, listOfFiles[i].getName().lastIndexOf(".")), formatter)))
+                .filter(i -> !listOfFiles[i].delete())
+                .mapToObj(i -> "Can't remove file: " + listOfFiles[i].getName()).forEach(log::error);
     }
 }
