@@ -1,0 +1,1 @@
+Directory contains actual data about covid-19 (365 days) while it's running.
