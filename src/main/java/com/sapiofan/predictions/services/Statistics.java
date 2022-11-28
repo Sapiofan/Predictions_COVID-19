@@ -1,12 +1,11 @@
 package com.sapiofan.predictions.services;
 
+import com.opencsv.CSVReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -14,6 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 @Service
@@ -23,8 +25,13 @@ public class Statistics {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
+    private Map<String, Map<String, Integer>> confirmedCases = new HashMap<>();
+
+    private Map<String, Map<String, Integer>> deaths = new HashMap<>();
+
     public void getWorldStatistics() {
         downloadFilesForLastYear();
+        readData();
     }
 
     private void downloadFilesForLastYear() {
@@ -55,6 +62,35 @@ public class Statistics {
         removeExtraFilesInStatistics(statisticsFolder, day);
     }
 
+    private void readData() {
+        File statisticsFolder = new File("src/main/resources/statistics/");
+        File[] listOfFiles = statisticsFolder.listFiles();
+
+        for (File listOfFile : listOfFiles) {
+            try (CSVReader csvReader = new CSVReader(new FileReader("src/main/resources/statistics/" + listOfFile))) {
+                String[] values;
+                while ((values = csvReader.readNext()) != null) {
+                    Map<String, Integer> dayCases = confirmedCases.get(listOfFile.getName());
+                    Map<String, Integer> dayDeaths = confirmedCases.get(listOfFile.getName());
+                    if(dayCases.get(values[3]) != null) {
+                        dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
+                        dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));
+                    } else {
+                        dayCases = new HashMap<>();
+                        dayDeaths = new HashMap<>();
+                        dayCases.put(values[3], Integer.parseInt(values[7]));
+                        dayDeaths.put(values[3], Integer.parseInt(values[8]));
+                        confirmedCases.put(listOfFile.getName(), dayCases);
+                        deaths.put(listOfFile.getName(), dayDeaths);
+                    }
+                }
+            } catch (IOException e) {
+                log.error("Something went wrong while reading CSV files: " + e);
+                return;
+            }
+        }
+    }
+
     private void downloadFile(String urlStr, String file) throws IOException {
         URL url = new URL(urlStr);
         ReadableByteChannel rbc = Channels.newChannel(url.openStream());
@@ -69,7 +105,7 @@ public class Statistics {
         LocalDate lastDayFromNow = LocalDate.parse(day, formatter);
 
         IntStream.range(0, listOfFiles.length)
-                .filter(i -> listOfFiles[i].getName().charAt(0) != 'R' &&
+                .filter(i -> Character.isDigit( listOfFiles[i].getName().charAt(0)) &&
                         lastDayFromNow.isAfter(LocalDate.parse(listOfFiles[i].getName()
                         .substring(0, listOfFiles[i].getName().lastIndexOf(".")), formatter)))
                 .filter(i -> !listOfFiles[i].delete())
