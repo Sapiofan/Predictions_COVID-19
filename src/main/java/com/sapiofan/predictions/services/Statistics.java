@@ -1,11 +1,15 @@
 package com.sapiofan.predictions.services;
 
 import com.opencsv.CSVReader;
+import com.sapiofan.predictions.entities.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -13,9 +17,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -25,13 +29,15 @@ public class Statistics {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private Map<String, Map<String, Integer>> confirmedCases = new HashMap<>();
-
-    private Map<String, Map<String, Integer>> deaths = new HashMap<>();
+    private final int DAYS = 10;
 
     public void getWorldStatistics() {
+        Data data = new Data();
         downloadFilesForLastYear();
-        readData();
+        calculateNewCases(data);
+        calculateNewDeaths(data);
+        readData(data);
+        analyzeDataForWorld(data);
     }
 
     private void downloadFilesForLastYear() {
@@ -44,7 +50,7 @@ public class Statistics {
         Path folder = Paths.get("src/main/resources/statistics/");
         File statisticsFolder = new File(folder.toString());
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < DAYS; i++) {
 
             temp += day + ".csv";
 
@@ -55,24 +61,28 @@ public class Statistics {
                 continue;
             }
 
-            day = LocalDate.parse(day, formatter).minusDays(1L).format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+            day = LocalDate.parse(day, formatter).minusDays(1L).format(formatter);
             temp = urlString;
         }
 
         removeExtraFilesInStatistics(statisticsFolder, day);
     }
 
-    private void readData() {
+    private void readData(Data data) {
         File statisticsFolder = new File("src/main/resources/statistics/");
         File[] listOfFiles = statisticsFolder.listFiles();
+        Map<String, Integer> labels = data.getLabels();
+        int counter = 0;
 
         for (File listOfFile : listOfFiles) {
+            labels.put(listOfFile.getName(), counter);
+            counter++;
             try (CSVReader csvReader = new CSVReader(new FileReader("src/main/resources/statistics/" + listOfFile))) {
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
-                    Map<String, Integer> dayCases = confirmedCases.get(listOfFile.getName());
-                    Map<String, Integer> dayDeaths = confirmedCases.get(listOfFile.getName());
-                    if(dayCases.get(values[3]) != null) {
+                    Map<String, Integer> dayCases = data.getConfirmedCases().get(listOfFile.getName());
+                    Map<String, Integer> dayDeaths = data.getDeaths().get(listOfFile.getName());
+                    if (dayCases.get(values[3]) != null) {
                         dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));
                     } else {
@@ -80,8 +90,8 @@ public class Statistics {
                         dayDeaths = new HashMap<>();
                         dayCases.put(values[3], Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], Integer.parseInt(values[8]));
-                        confirmedCases.put(listOfFile.getName(), dayCases);
-                        deaths.put(listOfFile.getName(), dayDeaths);
+                        data.getConfirmedCases().put(listOfFile.getName(), dayCases);
+                        data.getDeaths().put(listOfFile.getName(), dayDeaths);
                     }
                 }
             } catch (IOException e) {
@@ -89,6 +99,133 @@ public class Statistics {
                 return;
             }
         }
+    }
+
+    private void calculateNewCases(Data data) {
+        Map<String, Map<String, Integer>> newCases = new HashMap<>();
+
+        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getConfirmedCases().entrySet()) {
+            if (stringMapEntry.getKey().equals(lastDay)) {
+                continue;
+            }
+
+            Map<String, Integer> previousDay = data.getConfirmedCases().get(LocalDate.parse(stringMapEntry.getKey()
+                            .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
+                    .minusDays(1L).format(formatter) + ".csv");
+
+
+            Map<String, Integer> newCasesDay = new HashMap<>();
+            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                newCasesDay.put(stringIntegerEntry.getKey(),
+                        stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()));
+            }
+
+            newCases.put(stringMapEntry.getKey(), newCasesDay);
+        }
+
+        data.setNewCases(newCases);
+    }
+
+    private void calculateNewDeaths(Data data) {
+        Map<String, Map<String, Integer>> newDeaths = new HashMap<>();
+
+        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
+            if (stringMapEntry.getKey().equals(lastDay)) {
+                continue;
+            }
+
+            Map<String, Integer> previousDay = data.getDeaths().get(LocalDate.parse(stringMapEntry.getKey()
+                            .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
+                    .minusDays(1L).format(formatter) + ".csv");
+
+
+            Map<String, Integer> newDeathsDay = new HashMap<>();
+            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                newDeathsDay.put(stringIntegerEntry.getKey(),
+                        stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()));
+            }
+
+            newDeaths.put(stringMapEntry.getKey(), newDeathsDay);
+        }
+
+        data.setNewDeaths(newDeaths);
+    }
+
+    private void analyzeDataForWorld(Data data) {
+//        SimpleRegression(data);
+    }
+
+
+    /**
+     * @param cases new cases of deaths for a certain country or world, where string is date and
+     *              integer is number of cases
+     *              <p>
+     *              regressionFormula y = a + bx, where b = r * (Sy / Sx), a = y' - bx',
+     *              r = sum((x - x') * (y - y'))/sqrt(sum((x - x')*(x - x')) * sum((y - y')*(y - y'))), x' = average label,
+     * @return predicted cases for a certain country or world in general
+     */
+    private Map<String, Integer> SimpleRegression(Data data, Map<String, Integer> cases) {
+        double a, b;
+        double averageX, averageY;
+        Map<Integer, Double> xDiff;
+        Map<Integer, Double> yDiff;
+        double sum = IntStream.rangeClosed(1, DAYS).asDoubleStream().sum();
+        double newCasesSum = cases.values().stream().mapToDouble(v -> v).sum();
+        double sumXYDiffs, sumXDiffInSquare, sumYDiffInSquare, correlationCoefficient, Sy, Sx;
+
+        averageX = sum / DAYS;
+        averageY = newCasesSum / DAYS;
+
+        xDiff = cases.entrySet().stream()
+                .collect(Collectors.toMap(stringIntegerEntry ->
+                                data.getLabels().get(stringIntegerEntry.getKey()),
+                        stringIntegerEntry ->
+                                data.getLabels().get(stringIntegerEntry.getKey()) - averageX, (i, k) -> k));
+
+        yDiff = cases.entrySet().stream()
+                .collect(Collectors.toMap(stringIntegerEntry ->
+                                data.getLabels().get(stringIntegerEntry.getKey()),
+                        stringIntegerEntry -> stringIntegerEntry.getValue() - averageY, (i, k) -> k));
+
+        sumXYDiffs = xDiff.entrySet().stream()
+                .mapToDouble(integerDoubleEntry ->
+                        integerDoubleEntry.getValue() * yDiff.get(integerDoubleEntry.getKey()))
+                .sum();
+
+        sumXDiffInSquare = xDiff.values().stream().mapToDouble(aDouble -> aDouble * aDouble).sum();
+
+        sumYDiffInSquare = yDiff.values().stream().mapToDouble(aDouble -> aDouble * aDouble).sum();
+
+        correlationCoefficient = sumXYDiffs / (Math.sqrt(sumXDiffInSquare * sumYDiffInSquare));
+
+        Sy = Math.sqrt(sumYDiffInSquare / (DAYS - 1));
+        Sx = Math.sqrt(sumXDiffInSquare / (DAYS - 1));
+
+        b = correlationCoefficient * (Sy / Sx);
+        a = averageY - b * averageX;
+
+        int predictionCounter = DAYS + 1;
+
+        String day = LocalDate.now().format(formatter) + ".csv";
+        Map<String, Integer> predictDays = new HashMap<>();
+        for (int i = 0; i < DAYS; i++) {
+            predictDays.put(day, (int) Math.round(a + b * predictionCounter));
+            predictionCounter++;
+            day = LocalDate.parse(day, formatter).plusDays(1L).format(formatter);
+        }
+
+        return predictDays;
+    }
+
+    private void MSE(Map<String, Integer> cases, Map<String, Integer> predictedCases) {
+        double sum = cases.entrySet().stream().mapToDouble(entry -> (entry.getValue() - predictedCases.get(entry.getKey()))
+                * (entry.getValue() - predictedCases.get(entry.getKey()))).sum();
+
+        log.warn(sum / cases.size() + ""); // mse
+
+        // rmse = Math.sqrt(mse);
     }
 
     private void downloadFile(String urlStr, String file) throws IOException {
@@ -105,9 +242,9 @@ public class Statistics {
         LocalDate lastDayFromNow = LocalDate.parse(day, formatter);
 
         IntStream.range(0, listOfFiles.length)
-                .filter(i -> Character.isDigit( listOfFiles[i].getName().charAt(0)) &&
+                .filter(i -> Character.isDigit(listOfFiles[i].getName().charAt(0)) &&
                         lastDayFromNow.isAfter(LocalDate.parse(listOfFiles[i].getName()
-                        .substring(0, listOfFiles[i].getName().lastIndexOf(".")), formatter)))
+                                .substring(0, listOfFiles[i].getName().lastIndexOf(".")), formatter)))
                 .filter(i -> !listOfFiles[i].delete())
                 .mapToObj(i -> "Can't remove file: " + listOfFiles[i].getName()).forEach(log::error);
     }
