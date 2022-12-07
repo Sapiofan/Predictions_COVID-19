@@ -31,7 +31,7 @@ public class Statistics {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 10;
+    private final int DAYS = 30;
 
     public void getWorldStatistics() {
         Data data = new Data();
@@ -39,7 +39,15 @@ public class Statistics {
         readData(data);
         calculateNewCases(data);
         calculateNewDeaths(data);
-        analyzeDataForWorld(data);
+        analyzeNewCasesForWorld(data);
+//        data.getNewCases().entrySet().stream().findFirst()
+//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) -> analyzeDataForCountry(data, key)));
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
+            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                analyzeDataForCountry(data, stringIntegerEntry.getKey());
+            }
+            break;
+        }
     }
 
     private void downloadFilesForLastYear() {
@@ -91,6 +99,9 @@ public class Statistics {
                     if (dayCases != null && dayCases.get(values[3]) != null) {
                         dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));
+                    } else if (dayCases != null && dayCases.get(values[3]) == null) {
+                        dayCases.put(values[3], Integer.parseInt(values[7]));
+                        dayDeaths.put(values[3], Integer.parseInt(values[8]));
                     } else {
                         dayCases = new HashMap<>();
                         dayDeaths = new HashMap<>();
@@ -111,7 +122,7 @@ public class Statistics {
     private void calculateNewCases(Data data) {
         Map<String, Map<String, Integer>> newCases = new HashMap<>();
 
-        String lastDay = LocalDate.now().minusDays(DAYS + 1).format(formatter) + ".csv";
+        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getConfirmedCases().entrySet()) {
             if (stringMapEntry.getKey().equals(lastDay)) {
                 continue;
@@ -137,7 +148,7 @@ public class Statistics {
     private void calculateNewDeaths(Data data) {
         Map<String, Map<String, Integer>> newDeaths = new HashMap<>();
 
-        String lastDay = LocalDate.now().minusDays(DAYS + 1).format(formatter) + ".csv";
+        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
             if (stringMapEntry.getKey().equals(lastDay)) {
                 continue;
@@ -160,7 +171,7 @@ public class Statistics {
         data.setNewDeaths(newDeaths);
     }
 
-    private void analyzeDataForWorld(Data data) {
+    private void analyzeNewCasesForWorld(Data data) {
         Map<String, Integer> worldCases = getWorldCases(data);
         List<Double> simpleRegression = SimpleRegression(data, worldCases);
         double simpleRegressionErr = MSE(data, worldCases, simpleRegression);
@@ -178,18 +189,61 @@ public class Statistics {
             betterLine = simpleRegression;
         }
 
+        for (int i = 1; i <= DAYS; i++) {
+            Map<String, Integer> worldPrediction = new HashMap<>();
+            worldPrediction.put("World", (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
+        }
 
+        for (Map.Entry<String, Integer> stringIntegerEntry : worldCases.entrySet()) {
+            log.warn("Existed data: " + stringIntegerEntry.getKey() + " : " + stringIntegerEntry.getValue());
+        }
+
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+            log.warn("Predicted data: " + stringMapEntry.getKey() + " : " + stringMapEntry.getValue().get("World"));
+        }
+    }
+
+    private void analyzeDataForCountry(Data data, String country) {
+        Map<String, Integer> countryCases = getNewCasesOfCountry(data, country);
+        List<Double> simpleRegression = SimpleRegression(data, countryCases);
+        double simpleRegressionErr = MSE(data, countryCases, simpleRegression);
+        List<Double> descendentGradient = gradientDescent(data, countryCases);
+        double descendentGradientErr = MSE(data, countryCases, descendentGradient);
+
+        log.warn("Regression: " + simpleRegressionErr);
+        log.warn("Gradient result: " + descendentGradientErr);
+
+        List<Double> betterLine;
+
+        if (simpleRegressionErr > descendentGradientErr) {
+            betterLine = descendentGradient;
+        } else {
+            betterLine = simpleRegression;
+        }
+
+        for (int i = 1; i <= DAYS; i++) {
+            Map<String, Integer> worldPrediction = new HashMap<>();
+            worldPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
+        }
+    }
+
+    private Map<String, Integer> getNewCasesOfCountry(Data data, String country) {
+        return data.getNewCases().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry ->
+                        stringMapEntry.getValue().get(country), (a, b) -> b));
     }
 
     private Map<String, Integer> getWorldCases(Data data) {
         return data.getNewCases().entrySet()
                 .stream()
-                .collect(Collectors
-                        .toMap(Map.Entry::getKey, stringMapEntry -> stringMapEntry
-                                .getValue()
-                                .values()
-                                .stream()
-                                .mapToInt(i -> i).sum(), (a, b) -> b));
+                .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry -> stringMapEntry
+                        .getValue()
+                        .values()
+                        .stream()
+                        .mapToInt(i -> i).sum(), (a, b) -> b));
     }
 
 
@@ -263,27 +317,32 @@ public class Statistics {
 
     private double MSE(Data data, Map<String, Integer> cases, List<Double> thetas) {
         double sum = 0;
+
+//        log.warn("start mse");
         for (Map.Entry<String, Integer> stringIntegerEntry : cases.entrySet()) {
+//            log.warn(""+data.getLabels().get(stringIntegerEntry.getKey()));
             double prediction = getPrediction(thetas.get(1), thetas.get(0), data.getLabels().get(stringIntegerEntry.getKey()));
-            sum += Math.pow(prediction - stringIntegerEntry.getValue(), 2);
+//            double prediction = getPrediction(thetas.get(1), thetas.get(0), DAYS + counter);
+//            log.warn(stringIntegerEntry.getValue() + " : " + (int) prediction);
+            sum += Math.pow((int) (prediction) - stringIntegerEntry.getValue(), 2);
         }
 
-        return sum / (2 * cases.size());
+        return sum / (2.0 * cases.size());
     }
 
     private List<Double> gradientDescent(Data data, Map<String, Integer> cases) {
-        int iterations = 200;
+        int iterations = 1000;
         List<Double> thetas = new ArrayList<>();
         thetas.add((double) 0);
         thetas.add((double) 0);
 
         for (int i = 0; i < iterations; i++) {
-            if (i % 50 == 0) {
-                log.warn("Current iteration: " + i);
-                log.warn("Cost: " + MSE(data, cases, thetas));
-                log.warn("Theta1: " + thetas.get(0));
-                log.warn("Theta2: " + thetas.get(1));
-            }
+//            if (i % 50 == 0) {
+//                log.warn("Current iteration: " + i);
+//                log.warn("Cost: " + MSE(data, cases, thetas));
+//                log.warn("Theta1: " + thetas.get(0));
+//                log.warn("Theta2: " + thetas.get(1));
+//            }
             calculateThetas(data, cases, thetas);
         }
 
