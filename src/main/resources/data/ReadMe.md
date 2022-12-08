@@ -1,0 +1,1 @@
+Directory will contain data about covid-19.

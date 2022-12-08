@@ -1,15 +1,13 @@
 package com.sapiofan.predictions.services;
 
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import com.sapiofan.predictions.entities.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -17,10 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,14 +35,14 @@ public class Statistics {
         calculateNewCases(data);
         calculateNewDeaths(data);
         analyzeNewCasesForWorld(data);
-//        data.getNewCases().entrySet().stream().findFirst()
-//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) -> analyzeDataForCountry(data, key)));
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
-            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
-                analyzeDataForCountry(data, stringIntegerEntry.getKey());
-            }
-            break;
-        }
+        analyzeNewDeathsForWorld(data);
+        data.getNewCases().entrySet().stream().findFirst()
+                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+                        analyzeNewCasesForCountry(data, key)));
+        data.getNewDeaths().entrySet().stream().findFirst()
+                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+                        analyzeNewDeathsForCountry(data, key)));
+        writeToCSV(data);
     }
 
     private void downloadFilesForLastYear() {
@@ -56,7 +51,7 @@ public class Statistics {
         String temp = urlString;
         String day = LocalDate.now().minusDays(1L).format(formatter);
 
-        Path folder = Paths.get("src/main/resources/statistics/");
+        Path folder = Paths.get("src/main/resources/data/");
         File statisticsFolder = new File(folder.toString());
 
         for (int i = 0; i < DAYS; i++) {
@@ -78,7 +73,7 @@ public class Statistics {
     }
 
     private void readData(Data data) {
-        File statisticsFolder = new File("src/main/resources/statistics/");
+        File statisticsFolder = new File("src/main/resources/data/");
         File[] listOfFiles = statisticsFolder.listFiles();
         Map<String, Integer> labels = data.getLabels();
         int counter = 0;
@@ -122,23 +117,27 @@ public class Statistics {
     private void calculateNewCases(Data data) {
         Map<String, Map<String, Integer>> newCases = new HashMap<>();
 
-        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
+        boolean flag = false;
+
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getConfirmedCases().entrySet()) {
-            if (stringMapEntry.getKey().equals(lastDay)) {
-                continue;
-            }
 
             Map<String, Integer> previousDay = data.getConfirmedCases().get(LocalDate.parse(stringMapEntry.getKey()
                             .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
                     .minusDays(1L).format(formatter) + ".csv");
 
-
             Map<String, Integer> newCasesDay = new HashMap<>();
             for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                if (previousDay == null) {
+                    flag = true;
+                    break;
+                }
                 newCasesDay.put(stringIntegerEntry.getKey(),
                         stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()));
             }
-
+            if (flag) {
+                flag = false;
+                continue;
+            }
             newCases.put(stringMapEntry.getKey(), newCasesDay);
         }
 
@@ -147,12 +146,9 @@ public class Statistics {
 
     private void calculateNewDeaths(Data data) {
         Map<String, Map<String, Integer>> newDeaths = new HashMap<>();
+        boolean flag = false;
 
-        String lastDay = LocalDate.now().minusDays(DAYS).format(formatter) + ".csv";
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
-            if (stringMapEntry.getKey().equals(lastDay)) {
-                continue;
-            }
 
             Map<String, Integer> previousDay = data.getDeaths().get(LocalDate.parse(stringMapEntry.getKey()
                             .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
@@ -161,10 +157,17 @@ public class Statistics {
 
             Map<String, Integer> newDeathsDay = new HashMap<>();
             for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                if (previousDay == null) {
+                    flag = true;
+                    break;
+                }
                 newDeathsDay.put(stringIntegerEntry.getKey(),
                         stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()));
             }
-
+            if (flag) {
+                flag = false;
+                continue;
+            }
             newDeaths.put(stringMapEntry.getKey(), newDeathsDay);
         }
 
@@ -173,46 +176,105 @@ public class Statistics {
 
     private void analyzeNewCasesForWorld(Data data) {
         Map<String, Integer> worldCases = getWorldCases(data);
-        List<Double> simpleRegression = SimpleRegression(data, worldCases);
-        double simpleRegressionErr = MSE(data, worldCases, simpleRegression);
-        List<Double> descendentGradient = gradientDescent(data, worldCases);
-        double descendentGradientErr = MSE(data, worldCases, descendentGradient);
+        List<Double> betterLine = analyzeData(data, worldCases);
 
-        log.warn("Regression: " + simpleRegressionErr);
-        log.warn("Gradient result: " + descendentGradientErr);
-
-        List<Double> betterLine;
-
-        if (simpleRegressionErr > descendentGradientErr) {
-            betterLine = descendentGradient;
-        } else {
-            betterLine = simpleRegression;
-        }
-
-        for (int i = 1; i <= DAYS; i++) {
+        for (int i = 1; i <= DAYS; i++) { // add if for checking if map is null
             Map<String, Integer> worldPrediction = new HashMap<>();
             worldPrediction.put("World", (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
             data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
         }
+    }
 
-        for (Map.Entry<String, Integer> stringIntegerEntry : worldCases.entrySet()) {
-            log.warn("Existed data: " + stringIntegerEntry.getKey() + " : " + stringIntegerEntry.getValue());
-        }
+    private void analyzeNewDeathsForWorld(Data data) {
+        Map<String, Integer> worldCases = getWorldDeaths(data);
+        List<Double> betterLine = analyzeData(data, worldCases);
 
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
-            log.warn("Predicted data: " + stringMapEntry.getKey() + " : " + stringMapEntry.getValue().get("World"));
+        for (int i = 1; i <= DAYS; i++) {
+            Map<String, Integer> worldPrediction = new HashMap<>();
+            worldPrediction.put("World", (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            data.getPredictionNewDeaths().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
         }
     }
 
-    private void analyzeDataForCountry(Data data, String country) {
+    private void analyzeNewCasesForCountry(Data data, String country) {
         Map<String, Integer> countryCases = getNewCasesOfCountry(data, country);
+        List<Double> betterLine = analyzeData(data, countryCases);
+
+        for (int i = 1; i <= DAYS; i++) {
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
+            Map<String, Integer> countryPrediction = new HashMap<>();
+            if (data.getPredictionNewCases().get(date) != null) {
+                countryPrediction = data.getPredictionNewCases().get(date);
+            }
+            countryPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            data.getPredictionNewCases().put(date, countryPrediction);
+        }
+    }
+
+    private void analyzeNewDeathsForCountry(Data data, String country) {
+        Map<String, Integer> countryDeaths = getNewDeathsOfCountry(data, country);
+        List<Double> betterLine = analyzeData(data, countryDeaths);
+
+        for (int i = 1; i <= DAYS; i++) {
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
+            Map<String, Integer> countryPrediction = new HashMap<>();
+            if (data.getPredictionNewDeaths().get(date) != null) {
+                countryPrediction = data.getPredictionNewDeaths().get(date);
+            }
+            countryPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            data.getPredictionNewDeaths().put(date, countryPrediction);
+        }
+    }
+
+    private void writeToCSV(Data data) {
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
+            File file = new File("src/main/resources/templates/predictions/"
+                    + stringMapEntry.getKey());
+            try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
+                List<String[]> csvData = new ArrayList<>();
+                csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                Map<String, Integer> sortedMap = new TreeMap<>(stringMapEntry.getValue());
+                for (Map.Entry<String, Integer> entry : sortedMap.entrySet()) {
+                    String key = entry.getKey();
+                    Integer value = entry.getValue();
+                    csvData.add(new String[]{key, String.valueOf(value),
+                            String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey()).get(key))});
+                }
+                writer.writeAll(csvData);
+            } catch (IOException e) {
+                log.error("Error while writing data to CSV file: " + e);
+                return;
+            }
+        }
+
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+            File file = new File("src/main/resources/templates/predictions/"
+                    + stringMapEntry.getKey());
+            try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
+                List<String[]> csvData = new ArrayList<>();
+                csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                Map<String, Integer> sortedMap = new TreeMap<>(stringMapEntry.getValue());
+                sortedMap.forEach((key, value) -> csvData.add(new String[]{key, String.valueOf(value),
+                        String.valueOf(data.getPredictionNewDeaths().get(stringMapEntry.getKey()).get(key))}));
+                writer.writeAll(csvData);
+            } catch (IOException e) {
+                log.error("Error while writing data to CSV file: " + e);
+                return;
+            }
+        }
+
+        removeExtraFilesInStatistics(new File("src/main/resources/templates/predictions/"),
+                LocalDate.now().minusDays(DAYS + 1L).format(formatter));
+    }
+
+    private List<Double> analyzeData(Data data, Map<String, Integer> countryCases) {
         List<Double> simpleRegression = SimpleRegression(data, countryCases);
         double simpleRegressionErr = MSE(data, countryCases, simpleRegression);
         List<Double> descendentGradient = gradientDescent(data, countryCases);
         double descendentGradientErr = MSE(data, countryCases, descendentGradient);
 
-        log.warn("Regression: " + simpleRegressionErr);
-        log.warn("Gradient result: " + descendentGradientErr);
+//        log.warn("Regression: " + simpleRegressionErr);
+//        log.warn("Gradient result: " + descendentGradientErr);
 
         List<Double> betterLine;
 
@@ -222,11 +284,7 @@ public class Statistics {
             betterLine = simpleRegression;
         }
 
-        for (int i = 1; i <= DAYS; i++) {
-            Map<String, Integer> worldPrediction = new HashMap<>();
-            worldPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
-            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
-        }
+        return betterLine;
     }
 
     private Map<String, Integer> getNewCasesOfCountry(Data data, String country) {
@@ -236,8 +294,25 @@ public class Statistics {
                         stringMapEntry.getValue().get(country), (a, b) -> b));
     }
 
+    private Map<String, Integer> getNewDeathsOfCountry(Data data, String country) {
+        return data.getNewDeaths().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry ->
+                        stringMapEntry.getValue().get(country), (a, b) -> b));
+    }
+
     private Map<String, Integer> getWorldCases(Data data) {
         return data.getNewCases().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry -> stringMapEntry
+                        .getValue()
+                        .values()
+                        .stream()
+                        .mapToInt(i -> i).sum(), (a, b) -> b));
+    }
+
+    private Map<String, Integer> getWorldDeaths(Data data) {
+        return data.getNewDeaths().entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry -> stringMapEntry
                         .getValue()
@@ -295,15 +370,6 @@ public class Statistics {
         b = correlationCoefficient * (Sy / Sx);
         a = averageY - b * averageX;
 
-//        int predictionCounter = DAYS + 1;
-
-//        String day = LocalDate.now().format(formatter) + ".csv";
-//        Map<String, Integer> predictDays = new HashMap<>();
-//        for (int i = 0; i < DAYS; i++) {
-//            predictDays.put(day, (int) Math.round(a + b * predictionCounter));
-//            predictionCounter++;
-//            day = LocalDate.parse(day, formatter).plusDays(1L).format(formatter);
-//        }
         List<Double> thetas = new ArrayList<>();
         thetas.add(a);
         thetas.add(b);
@@ -312,22 +378,19 @@ public class Statistics {
     }
 
     private double getPrediction(double slope, double intercept, int x_value) {
-        return slope * x_value + intercept;
+        double result = slope * x_value + intercept;
+        if (result < 0) {
+            return 0;
+        }
+        return result;
     }
 
     private double MSE(Data data, Map<String, Integer> cases, List<Double> thetas) {
-        double sum = 0;
-
-//        log.warn("start mse");
-        for (Map.Entry<String, Integer> stringIntegerEntry : cases.entrySet()) {
-//            log.warn(""+data.getLabels().get(stringIntegerEntry.getKey()));
-            double prediction = getPrediction(thetas.get(1), thetas.get(0), data.getLabels().get(stringIntegerEntry.getKey()));
-//            double prediction = getPrediction(thetas.get(1), thetas.get(0), DAYS + counter);
-//            log.warn(stringIntegerEntry.getValue() + " : " + (int) prediction);
-            sum += Math.pow((int) (prediction) - stringIntegerEntry.getValue(), 2);
-        }
-
-        return sum / (2.0 * cases.size());
+        return cases.entrySet().stream()
+                .mapToDouble(stringIntegerEntry ->
+                        Math.pow((int) (getPrediction(thetas.get(1), thetas.get(0),
+                                data.getLabels().get(stringIntegerEntry.getKey()))) - stringIntegerEntry.getValue(), 2)).sum()
+                / (2.0 * cases.size());
     }
 
     private List<Double> gradientDescent(Data data, Map<String, Integer> cases) {
