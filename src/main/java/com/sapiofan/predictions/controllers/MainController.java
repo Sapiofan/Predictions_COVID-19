@@ -1,5 +1,6 @@
 package com.sapiofan.predictions.controllers;
 
+import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.services.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,8 +15,8 @@ public class MainController {
 
     @GetMapping("/")
     public String home(Model model) {
-        statistics.getWorldStatistics();
-        model.addAttribute("smth", "ssss");
+        Data data = statistics.getWorldStatistics();
+        model.addAttribute("message", data.getPredictionNewCases());
         return "home";
     }
 }

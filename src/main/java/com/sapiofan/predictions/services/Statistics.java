@@ -28,7 +28,7 @@ public class Statistics {
 
     private final int DAYS = 30;
 
-    public void getWorldStatistics() {
+    public Data getWorldStatistics() {
         Data data = new Data();
         downloadFilesForLastYear();
         readData(data);
@@ -43,6 +43,8 @@ public class Statistics {
                 .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
                         analyzeNewDeathsForCountry(data, key)));
         writeToCSV(data);
+
+        return data;
     }
 
     private void downloadFilesForLastYear() {
@@ -62,6 +64,8 @@ public class Statistics {
                 downloadFile(temp, folder + "/" + day + ".csv");
             } catch (IOException e) {
                 log.error("Error while downloading files from github: " + e);
+                day = LocalDate.parse(day, formatter).minusDays(1L).format(formatter);
+                temp = urlString;
                 continue;
             }
 
@@ -178,7 +182,7 @@ public class Statistics {
         Map<String, Integer> worldCases = getWorldCases(data);
         List<Double> betterLine = analyzeData(data, worldCases);
 
-        for (int i = 1; i <= DAYS; i++) { // add if for checking if map is null
+        for (int i = 1; i <= DAYS; i++) {
             Map<String, Integer> worldPrediction = new HashMap<>();
             worldPrediction.put("World", (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
             data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
@@ -203,11 +207,14 @@ public class Statistics {
         for (int i = 1; i <= DAYS; i++) {
             String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
             Map<String, Integer> countryPrediction = new HashMap<>();
-            if (data.getPredictionNewCases().get(date) != null) {
-                countryPrediction = data.getPredictionNewCases().get(date);
+            for (Map.Entry<String, Map<String, Integer>> s : data.getPredictionNewCases().entrySet()) {
+                if(s.getKey().equals(date)) {
+                    countryPrediction = s.getValue();
+                    break;
+                }
             }
             countryPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
-            data.getPredictionNewCases().put(date, countryPrediction);
+            data.getPredictionNewCases().replace(date, countryPrediction);
         }
     }
 
@@ -218,11 +225,14 @@ public class Statistics {
         for (int i = 1; i <= DAYS; i++) {
             String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
             Map<String, Integer> countryPrediction = new HashMap<>();
-            if (data.getPredictionNewDeaths().get(date) != null) {
-                countryPrediction = data.getPredictionNewDeaths().get(date);
+            for (Map.Entry<String, Map<String, Integer>> s : data.getPredictionNewCases().entrySet()) {
+                if(s.getKey().equals(date)) {
+                    countryPrediction = s.getValue();
+                    break;
+                }
             }
             countryPrediction.put(country, (int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
-            data.getPredictionNewDeaths().put(date, countryPrediction);
+            data.getPredictionNewDeaths().replace(date, countryPrediction);
         }
     }
 
@@ -233,8 +243,7 @@ public class Statistics {
             try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
                 List<String[]> csvData = new ArrayList<>();
                 csvData.add(new String[]{"Country", "Cases", "Deaths"});
-                Map<String, Integer> sortedMap = new TreeMap<>(stringMapEntry.getValue());
-                for (Map.Entry<String, Integer> entry : sortedMap.entrySet()) {
+                for (Map.Entry<String, Integer> entry : stringMapEntry.getValue().entrySet()) {
                     String key = entry.getKey();
                     Integer value = entry.getValue();
                     csvData.add(new String[]{key, String.valueOf(value),
@@ -253,9 +262,16 @@ public class Statistics {
             try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
                 List<String[]> csvData = new ArrayList<>();
                 csvData.add(new String[]{"Country", "Cases", "Deaths"});
-                Map<String, Integer> sortedMap = new TreeMap<>(stringMapEntry.getValue());
-                sortedMap.forEach((key, value) -> csvData.add(new String[]{key, String.valueOf(value),
-                        String.valueOf(data.getPredictionNewDeaths().get(stringMapEntry.getKey()).get(key))}));
+                for (Map.Entry<String, Integer> entry : stringMapEntry.getValue().entrySet()) {
+                    String key = entry.getKey();
+                    Integer value = entry.getValue();
+                    csvData.add(new String[]{key, String.valueOf(value),
+                            String.valueOf(data.getPredictionNewDeaths().entrySet()
+                                    .stream()
+                                    .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
+                                    .findFirst().map(Map.Entry::getValue).orElse(null)
+                                    .get(key))});
+                }
                 writer.writeAll(csvData);
             } catch (IOException e) {
                 log.error("Error while writing data to CSV file: " + e);

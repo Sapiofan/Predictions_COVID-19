@@ -1,21 +1,27 @@
 package com.sapiofan.predictions.entities;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Data {
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+
     private Map<String, Map<String, Integer>> confirmedCases = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> newCases = new HashMap<>();
+    private Map<String, Map<String, Integer>> newCases = new TreeMap<>(dateComparator());
 
-    private Map<String, Map<String, Integer>> predictionNewCases = new HashMap<>();
+    private Map<String, Map<String, Integer>> predictionNewCases = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Integer>> deaths = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> newDeaths = new HashMap<>();
+    private Map<String, Map<String, Integer>> newDeaths = new TreeMap<>(dateComparator());
 
-    private Map<String, Map<String, Integer>> predictionNewDeaths = new HashMap<>();
+    private Map<String, Map<String, Integer>> predictionNewDeaths = new TreeMap<>(dateComparator());
 
     private Map<String, Integer> labels = new HashMap<>();
 
@@ -74,5 +80,16 @@ public class Data {
 
     public void setPredictionNewDeaths(Map<String, Map<String, Integer>> predictionNewDeaths) {
         this.predictionNewDeaths = predictionNewDeaths;
+    }
+
+    public Comparator<String> dateComparator() {
+        return new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                LocalDate localDate1 = LocalDate.parse(o1.substring(0, o1.indexOf('.')), formatter);
+                LocalDate localDate2 = LocalDate.parse(o2.substring(0, o2.indexOf('.')), formatter);
+                return localDate1.isAfter(localDate2) ? 1 : -1;
+            }
+        };
     }
 }
