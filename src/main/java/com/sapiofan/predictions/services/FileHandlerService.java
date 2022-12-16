@@ -62,7 +62,7 @@ public class FileHandlerService {
     public void readData(Data data) {
         File statisticsFolder = new File("src/main/resources/data/");
         File[] listOfFiles = statisticsFolder.listFiles();
-        Map<String, Integer> labels = data.getLabels();
+        Map<String, Integer> labels = data.getLabelsByDate();
         int counter = 0;
         boolean header = true;
 

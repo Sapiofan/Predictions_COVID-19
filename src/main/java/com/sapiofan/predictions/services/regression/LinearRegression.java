@@ -1,7 +1,6 @@
 package com.sapiofan.predictions.services.regression;
 
 import com.sapiofan.predictions.entities.Data;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@Service
 public class LinearRegression {
 
     private final int DAYS = 30;
@@ -37,13 +35,13 @@ public class LinearRegression {
 
         xDiff = cases.entrySet().stream()
                 .collect(Collectors.toMap(stringIntegerEntry ->
-                                data.getLabels().get(stringIntegerEntry.getKey()),
+                                data.getLabelsByDate().get(stringIntegerEntry.getKey()),
                         stringIntegerEntry ->
-                                data.getLabels().get(stringIntegerEntry.getKey()) - averageX, (i, k) -> k));
+                                data.getLabelsByDate().get(stringIntegerEntry.getKey()) - averageX, (i, k) -> k));
 
         yDiff = cases.entrySet().stream()
                 .collect(Collectors.toMap(stringIntegerEntry ->
-                                data.getLabels().get(stringIntegerEntry.getKey()),
+                                data.getLabelsByDate().get(stringIntegerEntry.getKey()),
                         stringIntegerEntry -> stringIntegerEntry.getValue() - averageY, (i, k) -> k));
 
         sumXYDiffs = xDiff.entrySet().stream()
@@ -82,7 +80,7 @@ public class LinearRegression {
         return cases.entrySet().stream()
                 .mapToDouble(stringIntegerEntry ->
                         Math.pow((int) (getPrediction(thetas.get(1), thetas.get(0),
-                                data.getLabels().get(stringIntegerEntry.getKey()))) - stringIntegerEntry.getValue(), 2)).sum()
+                                data.getLabelsByDate().get(stringIntegerEntry.getKey()))) - stringIntegerEntry.getValue(), 2)).sum()
                 / (2.0 * cases.size());
     }
 
@@ -109,9 +107,9 @@ public class LinearRegression {
         double interceptGradient = 0, slopeGradient = 0, alpha = 0.001;
 
         for (Map.Entry<String, Integer> stringIntegerEntry : cases.entrySet()) {
-            double predicted = getPrediction(thetas.get(1), thetas.get(0), data.getLabels().get(stringIntegerEntry.getKey()));
+            double predicted = getPrediction(thetas.get(1), thetas.get(0), data.getLabelsByDate().get(stringIntegerEntry.getKey()));
             interceptGradient += predicted - stringIntegerEntry.getValue();
-            slopeGradient += (predicted - stringIntegerEntry.getValue()) * data.getLabels().get(stringIntegerEntry.getKey());
+            slopeGradient += (predicted - stringIntegerEntry.getValue()) * data.getLabelsByDate().get(stringIntegerEntry.getKey());
         }
 
         thetas.set(0, (thetas.get(0) - alpha * interceptGradient));

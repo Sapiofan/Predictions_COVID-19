@@ -25,7 +25,7 @@ public class Statistics {
     public Data getWorldStatistics() {
         Data data = new Data();
         LinearRegression linearRegression = new LinearRegression();
-        fileHandlerService.downloadFilesForLastYear();
+//        fileHandlerService.downloadFilesForLastYear();
         fileHandlerService.readData(data);
         calculateNewCases(data);
         calculateNewDeaths(data);

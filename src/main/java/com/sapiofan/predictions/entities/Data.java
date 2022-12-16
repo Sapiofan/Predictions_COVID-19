@@ -23,7 +23,9 @@ public class Data {
 
     private Map<String, Map<String, Integer>> predictionNewDeaths = new TreeMap<>(dateComparator());
 
-    private Map<String, Integer> labels = new HashMap<>();
+    private Map<String, Integer> labelsByDate = new HashMap<>();
+
+    private Map<Integer, String> labelsByNumber = new HashMap<>();
 
 
     public Map<String, Map<String, Integer>> getConfirmedCases() {
@@ -58,12 +60,12 @@ public class Data {
         this.newDeaths = newDeaths;
     }
 
-    public Map<String, Integer> getLabels() {
-        return labels;
+    public Map<String, Integer> getLabelsByDate() {
+        return labelsByDate;
     }
 
-    public void setLabels(Map<String, Integer> labels) {
-        this.labels = labels;
+    public void setLabelsByDate(Map<String, Integer> labelsByDate) {
+        this.labelsByDate = labelsByDate;
     }
 
     public Map<String, Map<String, Integer>> getPredictionNewCases() {
@@ -80,6 +82,14 @@ public class Data {
 
     public void setPredictionNewDeaths(Map<String, Map<String, Integer>> predictionNewDeaths) {
         this.predictionNewDeaths = predictionNewDeaths;
+    }
+
+    public Map<Integer, String> getLabelsByNumber() {
+        if (labelsByNumber.isEmpty() && !labelsByDate.isEmpty()) {
+            labelsByDate.forEach((key, value) -> labelsByNumber.put(value, key));
+        }
+
+        return labelsByNumber;
     }
 
     public Comparator<String> dateComparator() {
