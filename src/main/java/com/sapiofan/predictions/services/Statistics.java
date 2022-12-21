@@ -1,6 +1,7 @@
 package com.sapiofan.predictions.services;
 
 import com.sapiofan.predictions.entities.Data;
+import com.sapiofan.predictions.services.regression.ExponentialSmoothing;
 import com.sapiofan.predictions.services.regression.LinearRegression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,21 @@ public class Statistics {
 
     public Data getWorldStatistics() {
         Data data = new Data();
-        LinearRegression linearRegression = new LinearRegression();
+//        LinearRegression linearRegression = new LinearRegression();
+        ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
 //        fileHandlerService.downloadFilesForLastYear();
         fileHandlerService.readData(data);
         calculateNewCases(data);
         calculateNewDeaths(data);
-        analyzeNewCasesForWorld(data, linearRegression);
-        analyzeNewDeathsForWorld(data, linearRegression);
-        data.getNewCases().entrySet().stream().findFirst()
-                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
-                        analyzeNewCasesForCountry(data, key, linearRegression)));
-        data.getNewDeaths().entrySet().stream().findFirst()
-                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
-                        analyzeNewDeathsForCountry(data, key, linearRegression)));
+//        analyzeNewCasesForWorld(data, linearRegression);
+//        analyzeNewDeathsForWorld(data, linearRegression);
+//        data.getNewCases().entrySet().stream().findFirst()
+//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+//                        analyzeNewCasesForCountry(data, key, linearRegression)));
+//        data.getNewDeaths().entrySet().stream().findFirst()
+//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+//                        analyzeNewDeathsForCountry(data, key, linearRegression)));
+        exponentialSmoothing.prediction(data, getWorldCases(data));
         fileHandlerService.writeToCSV(data);
 
         return data;
@@ -70,6 +73,15 @@ public class Statistics {
         }
 
         data.setNewCases(newCases);
+
+        Map<String, Integer> worldCases = getWorldCases(data);
+
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
+            stringMapEntry.getValue().put("World", worldCases.get(stringMapEntry.getKey()));
+//            Map<String, Integer> withWorld = stringMapEntry.getValue();
+//            data.getNewCases().put(stringMapEntry.getKey(),
+//                    stringMapEntry.getValue().put("World", worldCases.get(stringMapEntry.getKey())));
+        }
     }
 
     private void calculateNewDeaths(Data data) {
@@ -97,6 +109,12 @@ public class Statistics {
                 continue;
             }
             newDeaths.put(stringMapEntry.getKey(), newDeathsDay);
+        }
+
+        Map<String, Integer> worldDeaths = getWorldDeaths(data);
+
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
+            stringMapEntry.getValue().put("World", worldDeaths.get(stringMapEntry.getKey()));
         }
 
         data.setNewDeaths(newDeaths);

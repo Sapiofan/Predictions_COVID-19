@@ -28,7 +28,7 @@ public class FileHandlerService {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 30;
+    private final int DAYS = 90;
 
     public void downloadFilesForLastYear() {
         String urlString = "https://raw.githubusercontent.com/CSSEGISandData/" +
@@ -67,7 +67,9 @@ public class FileHandlerService {
         boolean header = true;
 
         for (File listOfFile : listOfFiles) {
-            labels.put(listOfFile.getName(), counter);
+            if(listOfFile.getName().contains(".csv")) {
+                labels.put(listOfFile.getName(), counter);
+            }
             counter++;
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
                 String[] values;
