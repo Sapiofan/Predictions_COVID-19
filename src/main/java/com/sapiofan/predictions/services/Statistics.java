@@ -39,7 +39,7 @@ public class Statistics {
 //        data.getNewDeaths().entrySet().stream().findFirst()
 //                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
 //                        analyzeNewDeathsForCountry(data, key, linearRegression)));
-        exponentialSmoothing.prediction(data, getWorldCases(data));
+        exponentialSmoothing.prediction(data, getNewCasesOfCountry(data, "World"));
         fileHandlerService.writeToCSV(data);
 
         return data;
@@ -121,7 +121,7 @@ public class Statistics {
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
-        Map<String, Integer> worldCases = getWorldCases(data);
+        Map<String, Integer> worldCases = getNewCasesOfCountry(data, "World");
         List<Double> betterLine = analyzeData(data, worldCases, regression);
 
         for (int i = 1; i <= DAYS; i++) {
