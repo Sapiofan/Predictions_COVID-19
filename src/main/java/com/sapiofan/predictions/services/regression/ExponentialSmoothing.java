@@ -248,4 +248,54 @@ public class ExponentialSmoothing {
 
         return Math.sqrt(sum / withoutSeasonalPeriod.size());
     }
+
+    private double MASE(Data data, Map<String, Integer> cases, Map<String, Integer> predictions) {
+        double mae = MAE(data, cases, predictions);
+
+        Map<String, Integer> sortedMap = new TreeMap<>(data.dateComparator());
+        sortedMap.putAll(cases);
+
+        int lastValue = -1;
+        double sum = 0.0;
+
+        for (Map.Entry<String, Integer> stringIntegerEntry : sortedMap.entrySet()) {
+            if(lastValue == -1) {
+                lastValue = stringIntegerEntry.getValue();
+                continue;
+            }
+            sum += Math.abs(stringIntegerEntry.getValue() - lastValue);
+            lastValue = stringIntegerEntry.getValue();
+        }
+
+        return mae / sum;
+    }
+
+    private double MAE(Data data, Map<String, Integer> cases, Map<String, Integer> predictions) {
+        Map<String, Integer> sortedMap = new TreeMap<>(data.dateComparator());
+        Map<String, Integer> withoutSeasonalPeriod = new TreeMap<>(data.dateComparator());
+        sortedMap.putAll(cases);
+        int counter = 0;
+        for (Map.Entry<String, Integer> stringIntegerEntry : sortedMap.entrySet()) {
+            if (counter - 1 < SEASONAL_PERIOD) {
+                counter++;
+                continue;
+            }
+            withoutSeasonalPeriod.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
+        }
+
+        double sum = 0.0;
+        for (Map.Entry<String, Integer> stringIntegerEntry : withoutSeasonalPeriod.entrySet()) {
+            int predictedCase = 0;
+            for (Map.Entry<String, Integer> integerEntry : predictions.entrySet()) {
+                if (integerEntry.getKey().equals(stringIntegerEntry.getKey())) {
+                    predictedCase = integerEntry.getValue();
+                    break;
+                }
+            }
+            double pow = Math.abs((stringIntegerEntry.getValue() - predictedCase));
+            sum += pow;
+        }
+
+        return sum / predictions.size();
+    }
 }
