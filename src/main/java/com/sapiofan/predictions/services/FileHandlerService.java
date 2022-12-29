@@ -24,11 +24,11 @@ import java.util.stream.IntStream;
 @Service
 public class FileHandlerService {
 
-    private static final Logger log = LoggerFactory.getLogger(Statistics.class);
+    private static final Logger log = LoggerFactory.getLogger(FileHandlerService.class);
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 90;
+    private final int DAYS = 120;
 
     public void downloadFilesForLastYear() {
         String urlString = "https://raw.githubusercontent.com/CSSEGISandData/" +

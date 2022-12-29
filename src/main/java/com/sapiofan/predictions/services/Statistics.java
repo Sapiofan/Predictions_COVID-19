@@ -3,6 +3,8 @@ package com.sapiofan.predictions.services;
 import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.services.regression.ExponentialSmoothing;
 import com.sapiofan.predictions.services.regression.LinearRegression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +20,9 @@ public class Statistics {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 30;
+    private static final Logger log = LoggerFactory.getLogger(Statistics.class);
+
+    private final int DAYS = 120;
 
     @Autowired
     private FileHandlerService fileHandlerService;
@@ -39,7 +43,8 @@ public class Statistics {
 //        data.getNewDeaths().entrySet().stream().findFirst()
 //                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
 //                        analyzeNewDeathsForCountry(data, key, linearRegression)));
-        exponentialSmoothing.prediction(data, getNewCasesOfCountry(data, "World"));
+        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, "World"));
+        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, "World"));
         fileHandlerService.writeToCSV(data);
 
         return data;
@@ -108,16 +113,19 @@ public class Statistics {
                 flag = false;
                 continue;
             }
+
             newDeaths.put(stringMapEntry.getKey(), newDeathsDay);
         }
 
+        data.setNewDeaths(newDeaths);
         Map<String, Integer> worldDeaths = getWorldDeaths(data);
 
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
-            stringMapEntry.getValue().put("World", worldDeaths.get(stringMapEntry.getKey()));
-        }
-
-        data.setNewDeaths(newDeaths);
+        data.getNewDeaths()
+                .forEach((key, value) -> worldDeaths.entrySet()
+                        .stream()
+                        .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(key))
+                        .findFirst()
+                        .ifPresent(stringIntegerEntry -> value.put("World", stringIntegerEntry.getValue())));
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
