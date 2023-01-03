@@ -27,8 +27,16 @@ public class Statistics {
     @Autowired
     private FileHandlerService fileHandlerService;
 
-    public Data getWorldStatistics() {
+    public Data getWorldData() { //
         Data data = new Data();
+        fileHandlerService.readData(data);
+        calculateNewCases(data);
+        calculateNewDeaths(data);
+
+        return data;
+    }
+
+    public void getWorldStatistics(Data data) {
 //        LinearRegression linearRegression = new LinearRegression();
         ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
 //        fileHandlerService.downloadFilesForLastYear();
@@ -46,8 +54,16 @@ public class Statistics {
         exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, "World"));
         exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, "World"));
         fileHandlerService.writeToCSV(data);
+    }
 
-        return data;
+    public void getCountryData(Data data, String country) {
+        ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
+        fileHandlerService.readData(data);
+        calculateNewCases(data);
+        calculateNewDeaths(data);
+        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, country));
+        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, country));
+        fileHandlerService.writeToCSV(data);
     }
 
     private void calculateNewCases(Data data) {

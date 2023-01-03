@@ -170,4 +170,19 @@ public class FileHandlerService {
                 .filter(i -> !listOfFiles[i].delete())
                 .mapToObj(i -> "Can't remove file: " + listOfFiles[i].getName()).forEach(log::error);
     }
+
+    public List<String> countriesFromFile() {
+        List<String> countries = new ArrayList<>();
+        File file = new File("src/main/resources/countries.txt");
+        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                countries.add(line);
+            }
+        } catch (IOException e) {
+            log.error("Error while getting countries list: " + e);
+        }
+
+        return countries;
+    }
 }

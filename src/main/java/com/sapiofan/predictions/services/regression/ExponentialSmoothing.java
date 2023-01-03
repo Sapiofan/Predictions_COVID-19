@@ -16,6 +16,7 @@ public class ExponentialSmoothing {
 
     private final int SEASONAL_PERIOD = 7;
     private final int EXISTED_PERIOD_AFTER_SEASONAL = 113;
+    private final int SEASONAL_REPETITION = 3;
 
     private double ALPHA = 0;
     private double BETTA = 0;
@@ -116,7 +117,7 @@ public class ExponentialSmoothing {
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             seasonalCopy.add((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1))
                     / level.get(i) + (1 - gamma) * seasonalCopy.get(i)));
-            level.add((alpha / (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 2)) / seasonalCopy.get(i + 1))
+            level.add((alpha * (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 2)) / seasonalCopy.get(i + 1))
                     + (1 - alpha) * (level.get(i) + trend.get(i))));
             trend.add((betta * (level.get(i + 1) - level.get(i)) + (1 - betta) * trend.get(i)));
             predictionsPast.put(numberLabels.get(SEASONAL_PERIOD + i + 2),
@@ -130,14 +131,12 @@ public class ExponentialSmoothing {
         Map<String, Integer> predictionsFuture = new TreeMap<>(data.dateComparator());
 
         String day = LocalDate.now().format(formatter);
-        for (int i = 1; i <= SEASONAL_PERIOD; i++) {
+        for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {
             predictionsFuture.put(day + ".csv", (int) ((level.get(level.size() - 1) + trend.get(trend.size() - 1))
-                    * seasonalCopy.get(seasonalCopy.size() - (SEASONAL_PERIOD - i) - 1)));
+                    * seasonalCopy.get(seasonalCopy.size() - (SEASONAL_PERIOD * SEASONAL_REPETITION - i) - 1)));
 
             day = LocalDate.parse(day, formatter).plusDays(1L).format(formatter);
         }
-
-        log.warn("" + RMSE(data, cases, predictionsPast));
 
         return predictionsFuture;
     }
@@ -162,7 +161,7 @@ public class ExponentialSmoothing {
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             seasonalCopy.add((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1))
                     / level.get(i) + (1 - gamma) * seasonalCopy.get(i)));
-            level.add((alpha / (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 2)) / seasonalCopy.get(i + 1))
+            level.add((alpha * (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 2)) / seasonalCopy.get(i + 1))
                     + (1 - alpha) * (level.get(i) + trend.get(i))));
             trend.add((betta * (level.get(i + 1) - level.get(i)) + (1 - betta) * trend.get(i)));
             predictionsPast.put(numberLabels.get(SEASONAL_PERIOD + i + 2),
@@ -205,7 +204,7 @@ public class ExponentialSmoothing {
         sortedMap.putAll(cases);
         int counter = 0;
         for (Map.Entry<String, Integer> stringIntegerEntry : sortedMap.entrySet()) {
-            if (counter - 1 < SEASONAL_PERIOD * 2) {
+            if (counter - 1 < SEASONAL_PERIOD) {
                 counter++;
                 continue;
             }

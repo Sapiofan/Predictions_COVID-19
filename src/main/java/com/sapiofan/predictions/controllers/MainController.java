@@ -26,7 +26,8 @@ public class MainController {
 
     @GetMapping("/")
     public String home(Model model) {
-        Data data = statistics.getWorldStatistics();
+        Data data = statistics.getWorldData();
+        statistics.getWorldStatistics(data);
         TreeMap<String, Map<String, Integer>> sortedMapPrediction = new TreeMap<>(data.dateComparator());
         TreeMap<String, Map<String, Integer>> sortedMapInit = new TreeMap<>(data.dateComparator());
         sortedMapPrediction.putAll(data.getPredictionNewCases());
