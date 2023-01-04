@@ -23,20 +23,26 @@ public class ExponentialSmoothing {
     private double GAMMA = 0;
     private double error = -1;
 
-    public void predictionCases(Data data, Map<String, Integer> cases) {
+    public void predictionCases(Data data, Map<String, Integer> cases, String country) {
+        if(cases == null || cases.size() == 0) {
+            return;
+        }
         Map<String, Integer> prediction = minimizationOfError(data, cases);
         for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
             Map<String, Integer> map = new HashMap<>();
-            map.put("World", stringIntegerEntry.getValue());
+            map.put(country, stringIntegerEntry.getValue());
             data.getPredictionNewCases().put(stringIntegerEntry.getKey(), map);
         }
     }
 
-    public void predictionDeaths(Data data, Map<String, Integer> deaths) {
+    public void predictionDeaths(Data data, Map<String, Integer> deaths, String country) {
+        if(deaths == null || deaths.size() == 0) {
+            return;
+        }
         Map<String, Integer> prediction = minimizationOfError(data, deaths);
         for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
             Map<String, Integer> map = new HashMap<>();
-            map.put("World", stringIntegerEntry.getValue());
+            map.put(country, stringIntegerEntry.getValue());
             data.getPredictionNewDeaths().put(stringIntegerEntry.getKey(), map);
         }
     }
@@ -128,7 +134,7 @@ public class ExponentialSmoothing {
                 / level.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)
                 + (1 - gamma) * seasonalCopy.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)));
 
-        Map<String, Integer> predictionsFuture = new TreeMap<>(data.dateComparator());
+        Map<String, Integer> predictionsFuture = new HashMap<>();
 
         String day = LocalDate.now().format(formatter);
         for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {

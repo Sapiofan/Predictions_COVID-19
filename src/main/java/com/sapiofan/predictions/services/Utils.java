@@ -1,17 +1,12 @@
 package com.sapiofan.predictions.services;
 
+import com.sapiofan.predictions.services.impl.FileHandlerServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
-
-    @Autowired
-    private static FileHandlerService fileHandlerService;
-
-    public static List<String> getCountries() {
+    public static List<String> getCountries(FileHandlerService fileHandlerService) {
         return fileHandlerService.countriesFromFile();
     }
 }

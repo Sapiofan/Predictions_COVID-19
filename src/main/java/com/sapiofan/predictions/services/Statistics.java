@@ -1,18 +1,19 @@
 package com.sapiofan.predictions.services;
 
 import com.sapiofan.predictions.entities.Data;
+import com.sapiofan.predictions.services.impl.FileHandlerServiceImpl;
 import com.sapiofan.predictions.services.regression.ExponentialSmoothing;
 import com.sapiofan.predictions.services.regression.LinearRegression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +28,60 @@ public class Statistics {
     @Autowired
     private FileHandlerService fileHandlerService;
 
-    public Data getWorldData() { //
+    @EventListener(ApplicationReadyEvent.class)
+    public void doSomethingAfterStartup() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                List<Thread> threads = new ArrayList<>();
+                log.warn("Started calculating");
+//                fileHandlerService.downloadFilesWithData();
+                log.warn("Ended downloading");
+                Data data = getWorldData();
+                log.warn("Get data");
+                for (String country : Utils.getCountries(fileHandlerService)) {
+                    Thread thread = new Thread(() -> getCountryDataExponential(data, country));
+                    thread.start();
+                    thread.setName(country);
+                    threads.add(thread);
+                    log.warn(thread.getName());
+                    break;
+                }
+                boolean flag;
+                while (true) {
+                    flag = threads.stream().anyMatch(Thread::isAlive);
+                    if(!flag) {
+                        getCountryDataExponential(data, "World");
+                        log.warn(""+data.getPredictionNewCases());
+                        log.warn(""+data.getPredictionNewDeaths());
+                        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+                            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                                log.warn(""+stringIntegerEntry);
+                            }
+                            break;
+                        }
+                        log.warn("Write to csv");
+                        fileHandlerService.writeToCSV(data);
+                        log.warn("Written to csv");
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            log.error("Can't sleep timer: " + e);
+                        }
+                    }
+                }
+//                getCountryDataLinear(data);
+            }
+        }, 0, 43200000);
+    }
+
+    public Data getWorldData() {
+        Date start = new Date();
+        fileHandlerService.downloadFilesWithData();
+        Date end = new Date();
+        log.warn(((end.getTime() - start.getTime()) / 1000)+"");
         Data data = new Data();
         fileHandlerService.readData(data);
         calculateNewCases(data);
@@ -37,33 +91,25 @@ public class Statistics {
     }
 
     public void getWorldStatistics(Data data) {
-//        LinearRegression linearRegression = new LinearRegression();
-        ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
-//        fileHandlerService.downloadFilesForLastYear();
-        fileHandlerService.readData(data);
-        calculateNewCases(data);
-        calculateNewDeaths(data);
-//        analyzeNewCasesForWorld(data, linearRegression);
-//        analyzeNewDeathsForWorld(data, linearRegression);
-//        data.getNewCases().entrySet().stream().findFirst()
-//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
-//                        analyzeNewCasesForCountry(data, key, linearRegression)));
-//        data.getNewDeaths().entrySet().stream().findFirst()
-//                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
-//                        analyzeNewDeathsForCountry(data, key, linearRegression)));
-        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, "World"));
-        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, "World"));
-        fileHandlerService.writeToCSV(data);
+        getCountryDataExponential(data, "World");
     }
 
-    public void getCountryData(Data data, String country) {
+    public void getCountryDataExponential(Data data, String country) {
         ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
-        fileHandlerService.readData(data);
-        calculateNewCases(data);
-        calculateNewDeaths(data);
-        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, country));
-        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, country));
-        fileHandlerService.writeToCSV(data);
+        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, country), country);
+        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, country), country);
+    }
+
+    public void getCountryDataLinear(Data data) {
+        LinearRegression linearRegression = new LinearRegression();
+        analyzeNewCasesForWorld(data, linearRegression);
+        analyzeNewDeathsForWorld(data, linearRegression);
+        data.getNewCases().entrySet().stream().findFirst()
+                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+                        analyzeNewCasesForCountry(data, key, linearRegression)));
+        data.getNewDeaths().entrySet().stream().findFirst()
+                .ifPresent(stringMapEntry -> stringMapEntry.getValue().forEach((key, value) ->
+                        analyzeNewDeathsForCountry(data, key, linearRegression)));
     }
 
     private void calculateNewCases(Data data) {
@@ -217,14 +263,16 @@ public class Statistics {
     }
 
     private Map<String, Integer> getNewCasesOfCountry(Data data, String country) {
-        return data.getNewCases().entrySet()
+        return data.getNewCases().entrySet().stream().findFirst().get().getValue().get(country) == null ? null :
+                data.getNewCases().entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry ->
                         stringMapEntry.getValue().get(country), (a, b) -> b));
     }
 
     private Map<String, Integer> getNewDeathsOfCountry(Data data, String country) {
-        return data.getNewDeaths().entrySet()
+        return data.getNewDeaths().entrySet().stream().findFirst().get().getValue().get(country) == null ? null :
+                data.getNewDeaths().entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry ->
                         stringMapEntry.getValue().get(country), (a, b) -> b));
