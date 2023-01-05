@@ -38,21 +38,14 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
         Path folder = Paths.get("src/main/resources/data/");
         File statisticsFolder = new File(folder.toString());
-        List<String> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.list())));
-        files.removeIf(s -> !s.matches(".*[0-9].*"));
+        List<String> fileNames = sortFilesByDate(statisticsFolder);
+        List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.listFiles())));
 
-        files.sort((o1, o2) -> {
-            LocalDate localDate1 = LocalDate.parse(o1.substring(0, o1.indexOf('.')), formatter);
-            LocalDate localDate2 = LocalDate.parse(o2.substring(0, o2.indexOf('.')), formatter);
-            return localDate1.isAfter(localDate2) ? 1 : -1;
-        });
-
-        LocalDate localDate1 = LocalDate.parse(files.get(files.size() - 1)
-                .substring(0, files.get(files.size() - 1).indexOf('.')), formatter);
+        LocalDate localDate1 = LocalDate.parse(fileNames.get(fileNames.size() - 1)
+                .substring(0, fileNames.get(fileNames.size() - 1).indexOf('.')), formatter);
         LocalDate localDate2 = LocalDate.now();
 
-        int count = files.size() < DAYS ? DAYS : Math.min((int) ChronoUnit.DAYS.between(localDate1, localDate2) + 1, DAYS);
-        log.warn(count+" :Counter");
+        int count = fileNames.size() < DAYS ? DAYS : Math.min((int) ChronoUnit.DAYS.between(localDate1, localDate2) + 1, DAYS);
 
         for (int i = 0; i < count; i++) {
 
@@ -61,7 +54,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             try {
                 downloadFile(temp, folder + "/" + day + ".csv");
             } catch (IOException e) {
-                log.error("Error while downloading files from github: " + e);
+                log.error("Error while downloading fileNames from github: " + e);
                 day = LocalDate.parse(day, formatter).minusDays(1L).format(formatter);
                 temp = urlString;
                 continue;
@@ -71,7 +64,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             temp = urlString;
         }
 
-        removeExtraFilesInStatistics(files);
+        removeExtraFilesInStatistics(fileNames, files);
     }
 
     @Override
@@ -148,13 +141,22 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                 csvData.add(new String[]{"Country", "Cases", "Deaths"});
                 Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
                 for (String s : set) {
-                    log.warn(s);
+                    Map<String, Integer> map = data.getPredictionNewDeaths().entrySet()
+                            .stream()
+                            .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
+                            .findFirst()
+                            .map(Map.Entry::getValue)
+                            .orElse(null);
+                    if(map == null) {
+                        log.error("Couldn't find: " + s + " in deaths");
+                        continue;
+                    }
+                    if(map.get(s) == 2147483647) {
+                        log.error(s);
+                        log.error(""+map);
+                    }
                     csvData.add(new String[]{s, String.valueOf(stringMapEntry.getValue().get(s)),
-                            String.valueOf(data.getPredictionNewDeaths().entrySet()
-                                    .stream()
-                                    .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
-                                    .findFirst().map(Map.Entry::getValue).orElse(null)
-                                    .get(s))});
+                            String.valueOf(map.get(s))});
                 }
 //                for (Map.Entry<String, Integer> entry : stringMapEntry.getValue().entrySet()) {
 //                    String key = entry.getKey();
@@ -173,8 +175,24 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             }
         }
 
-//        removeExtraFilesInStatistics(new File("src/main/resources/templates/predictions/"),
-//                LocalDate.now().minusDays(DAYS + 1L).format(formatter));
+        File forecastFolder = new File("src/main/resources/templates/predictions/");
+        List<String> fileNames = sortFilesByDate(forecastFolder);
+        List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(forecastFolder.listFiles())));
+
+        removeExtraFilesInStatistics(fileNames, files);
+    }
+
+    private List<String> sortFilesByDate(File folder) {
+        List<String> fileNames = new ArrayList<>(Arrays.asList(Objects.requireNonNull(folder.list())));
+        fileNames.removeIf(s -> !s.matches(".*[0-9].*"));
+
+        fileNames.sort((o1, o2) -> {
+            LocalDate localDate1 = LocalDate.parse(o1.substring(0, o1.indexOf('.')), formatter);
+            LocalDate localDate2 = LocalDate.parse(o2.substring(0, o2.indexOf('.')), formatter);
+            return localDate1.isAfter(localDate2) ? 1 : -1;
+        });
+
+        return fileNames;
     }
 
     private void downloadFile(String urlStr, String file) throws IOException {
@@ -186,18 +204,15 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         rbc.close();
     }
 
-    private void removeExtraFilesInStatistics(List<String> files) {
+    private void removeExtraFilesInStatistics(List<String> fileNames, List<File> files) {
         LocalDate lastDayFromNow = LocalDate.now().minusDays(DAYS);
-        for (String file : files) {
-            LocalDate.parse(file.substring(0, file.indexOf('.')), formatter).isBefore(lastDayFromNow);
-        }
-
-//        IntStream.range(0, files.size())
-//                .filter(i -> Character.isDigit(i.charAt(0)) &&
-//                        lastDayFromNow.isAfter(LocalDate.parse(listOfFiles[i].getName()
-//                                .substring(0, listOfFiles[i].getName().lastIndexOf(".")), formatter)))
-//                .filter(i -> !listOfFiles[i].delete())
-//                .mapToObj(i -> "Can't remove file: " + listOfFiles[i].getName()).forEach(log::error);
+        fileNames.stream()
+                .filter(file ->
+                        LocalDate.parse(file.substring(0, file.indexOf('.')), formatter).isBefore(lastDayFromNow))
+                .forEach(file -> files.get(files.indexOf(
+                        files.stream()
+                        .filter(file1 -> file1.getName().equals(file))
+                        .findFirst().get())).delete());
     }
 
     @Override

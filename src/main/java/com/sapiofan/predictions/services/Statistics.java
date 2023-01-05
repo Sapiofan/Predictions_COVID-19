@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,40 +35,23 @@ public class Statistics {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                List<Thread> threads = new ArrayList<>();
-                log.warn("Started calculating");
-//                fileHandlerService.downloadFilesWithData();
-                log.warn("Ended downloading");
                 Data data = getWorldData();
-                log.warn("Get data");
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+
                 for (String country : Utils.getCountries(fileHandlerService)) {
-                    Thread thread = new Thread(() -> getCountryDataExponential(data, country));
-                    thread.start();
-                    thread.setName(country);
-                    threads.add(thread);
-                    log.warn(thread.getName());
-                    break;
+                    executor.execute(() -> getCountryDataExponential(data, country));
                 }
-                boolean flag;
+
                 while (true) {
-                    flag = threads.stream().anyMatch(Thread::isAlive);
-                    if(!flag) {
+                    if(executor.getActiveCount() == 0) {
                         getCountryDataExponential(data, "World");
-                        log.warn(""+data.getPredictionNewCases());
-                        log.warn(""+data.getPredictionNewDeaths());
-                        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
-                            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
-                                log.warn(""+stringIntegerEntry);
-                            }
-                            break;
-                        }
                         log.warn("Write to csv");
                         fileHandlerService.writeToCSV(data);
                         log.warn("Written to csv");
                         break;
                     } else {
                         try {
-                            Thread.sleep(2000);
+                            Thread.sleep(3000);
                         } catch (InterruptedException e) {
                             log.error("Can't sleep timer: " + e);
                         }
@@ -78,10 +63,7 @@ public class Statistics {
     }
 
     public Data getWorldData() {
-        Date start = new Date();
         fileHandlerService.downloadFilesWithData();
-        Date end = new Date();
-        log.warn(((end.getTime() - start.getTime()) / 1000)+"");
         Data data = new Data();
         fileHandlerService.readData(data);
         calculateNewCases(data);
@@ -130,7 +112,7 @@ public class Statistics {
                     break;
                 }
                 newCasesDay.put(stringIntegerEntry.getKey(),
-                        stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()));
+                        Math.max(stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()), 0));
             }
             if (flag) {
                 flag = false;
@@ -145,9 +127,6 @@ public class Statistics {
 
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
             stringMapEntry.getValue().put("World", worldCases.get(stringMapEntry.getKey()));
-//            Map<String, Integer> withWorld = stringMapEntry.getValue();
-//            data.getNewCases().put(stringMapEntry.getKey(),
-//                    stringMapEntry.getValue().put("World", worldCases.get(stringMapEntry.getKey())));
         }
     }
 
