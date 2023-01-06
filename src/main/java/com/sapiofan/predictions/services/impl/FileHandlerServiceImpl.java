@@ -18,7 +18,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.IntStream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 @Service
 public class FileHandlerServiceImpl implements FileHandlerService {
@@ -76,7 +78,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         boolean header = true;
 
         for (File listOfFile : listOfFiles) {
-            if(listOfFile.getName().contains(".csv")) {
+            if (listOfFile.getName().contains(".csv")) {
                 labels.put(listOfFile.getName(), counter);
             }
             counter++;
@@ -114,72 +116,59 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     @Override
     public void writeToCSV(Data data) {
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
-            File file = new File("src/main/resources/templates/predictions/"
-                    + stringMapEntry.getKey());
-            try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
-                List<String[]> csvData = new ArrayList<>();
-                csvData.add(new String[]{"Country", "Cases", "Deaths"});
-                for (Map.Entry<String, Integer> entry : stringMapEntry.getValue().entrySet()) {
-                    String key = entry.getKey();
-                    Integer value = entry.getValue();
-                    csvData.add(new String[]{key, String.valueOf(value),
-                            String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey()).get(key))});
+            executor.execute(() -> {
+                try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
+                        + stringMapEntry.getKey()))) {
+                    List<String[]> csvData = new ArrayList<>();
+                    csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                    stringMapEntry.getValue().entrySet()
+                            .stream()
+                            .map(entry -> new String[]{entry.getKey(), String.valueOf(entry.getValue()),
+                            String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey())
+                                    .get(entry.getKey()))})
+                            .forEach(csvData::add);
+                    writer.writeAll(csvData);
+                } catch (IOException e) {
+                    log.error("Error while writing data to CSV file: " + e);
                 }
-                writer.writeAll(csvData);
-            } catch (IOException e) {
-                log.error("Error while writing data to CSV file: " + e);
-                return;
-            }
+            });
         }
 
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
-            File file = new File("src/main/resources/templates/predictions/"
-                    + stringMapEntry.getKey());
-            try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
-                List<String[]> csvData = new ArrayList<>();
-                csvData.add(new String[]{"Country", "Cases", "Deaths"});
-                Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
-                for (String s : set) {
-                    Map<String, Integer> map = data.getPredictionNewDeaths().entrySet()
+            executor.execute(() -> {
+                try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
+                        + stringMapEntry.getKey()))) {
+                    List<String[]> csvData = new ArrayList<>();
+                    csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                    Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
+                    set.stream()
+                            .map(s -> new String[]{s, String.valueOf(stringMapEntry
+                            .getValue()
+                            .entrySet()
+                            .stream()
+                            .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(s))
+                            .findFirst()
+                            .map(Map.Entry::getValue)
+                            .orElse(-1)), String.valueOf(data.getPredictionNewDeaths().entrySet()
                             .stream()
                             .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
                             .findFirst()
                             .map(Map.Entry::getValue)
-                            .orElse(null);
-                    if(map == null) {
-                        log.error("Couldn't find: " + s + " in deaths");
-                        continue;
-                    }
-                    if(map.get(s) == 2147483647) {
-                        log.error(s);
-                        log.error(""+map);
-                    }
-                    csvData.add(new String[]{s, String.valueOf(stringMapEntry.getValue().get(s)),
-                            String.valueOf(map.get(s))});
+                            .orElse(null).get(s))})
+                            .forEach(csvData::add);
+                    writer.writeAll(csvData);
+                } catch (IOException e) {
+                    log.error("Error while writing data to CSV file: " + e);
                 }
-//                for (Map.Entry<String, Integer> entry : stringMapEntry.getValue().entrySet()) {
-//                    String key = entry.getKey();
-//                    Integer value = entry.getValue();
-//                    csvData.add(new String[]{key, String.valueOf(value),
-//                            String.valueOf(data.getPredictionNewDeaths().entrySet()
-//                                    .stream()
-//                                    .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
-//                                    .findFirst().map(Map.Entry::getValue).orElse(null)
-//                                    .get(key))});
-//                }
-                writer.writeAll(csvData);
-            } catch (IOException e) {
-                log.error("Error while writing data to CSV file: " + e);
-                return;
-            }
+            });
         }
 
         File forecastFolder = new File("src/main/resources/templates/predictions/");
-        List<String> fileNames = sortFilesByDate(forecastFolder);
-        List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(forecastFolder.listFiles())));
 
-        removeExtraFilesInStatistics(fileNames, files);
+        removeExtraFilesInStatistics(sortFilesByDate(forecastFolder),
+                new ArrayList<>(Arrays.asList(Objects.requireNonNull(forecastFolder.listFiles()))));
     }
 
     private List<String> sortFilesByDate(File folder) {
@@ -196,8 +185,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     }
 
     private void downloadFile(String urlStr, String file) throws IOException {
-        URL url = new URL(urlStr);
-        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
+        ReadableByteChannel rbc = Channels.newChannel(new URL(urlStr).openStream());
         FileOutputStream fos = new FileOutputStream(file);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
@@ -211,19 +199,15 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         LocalDate.parse(file.substring(0, file.indexOf('.')), formatter).isBefore(lastDayFromNow))
                 .forEach(file -> files.get(files.indexOf(
                         files.stream()
-                        .filter(file1 -> file1.getName().equals(file))
-                        .findFirst().get())).delete());
+                                .filter(file1 -> file1.getName().equals(file))
+                                .findFirst().get())).delete());
     }
 
     @Override
     public List<String> countriesFromFile() {
         List<String> countries = new ArrayList<>();
-        File file = new File("src/main/resources/countries.txt");
-        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                countries.add(line);
-            }
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/countries.txt"))) {
+            countries = bufferedReader.lines().collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Error while getting countries list: " + e);
         }

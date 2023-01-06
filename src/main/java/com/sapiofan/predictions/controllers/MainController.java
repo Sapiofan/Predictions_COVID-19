@@ -1,7 +1,7 @@
 package com.sapiofan.predictions.controllers;
 
 import com.sapiofan.predictions.entities.Data;
-import com.sapiofan.predictions.services.impl.FileHandlerServiceImpl;
+import com.sapiofan.predictions.services.FileHandlerService;
 import com.sapiofan.predictions.services.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +21,6 @@ public class MainController {
     @Autowired
     private Statistics statistics;
 
-    @Autowired
-    private FileHandlerServiceImpl fileHandlerService;
-
     @GetMapping("/")
     public String home(Model model) {
         Data data = statistics.getWorldData();
@@ -41,10 +38,4 @@ public class MainController {
     public String getCountryStatistics() {
         return "country";
     }
-
-//    @GetMapping("/load-files")
-//    public String loadFiles() {
-//        fileHandlerService.downloadFilesWithData();
-//        return "home";
-//    }
 }
