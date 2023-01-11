@@ -31,6 +31,9 @@ public class StatisticsImpl implements Statistics {
     @Autowired
     private FileHandlerService fileHandlerService;
 
+    @Autowired
+    private Utils utils;
+
     @EventListener(ApplicationReadyEvent.class)
     public void doSomethingAfterStartup() {
         new Timer().scheduleAtFixedRate(new TimerTask() {
@@ -40,7 +43,7 @@ public class StatisticsImpl implements Statistics {
                 ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
 
                 log.warn("Started calculating exponential smooth");
-                for (String country : Utils.getCountries(fileHandlerService)) {
+                for (String country : utils.getCountries()) {
                     executor.execute(() -> getCountryDataExponential(data, country));
                 }
 

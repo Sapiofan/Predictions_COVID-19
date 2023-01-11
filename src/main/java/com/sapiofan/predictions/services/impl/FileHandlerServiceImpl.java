@@ -6,6 +6,7 @@ import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.services.FileHandlerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -29,7 +30,10 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 120;
+    private final int DAYS = 121;
+
+    @Autowired
+    private Utils utils;
 
     @Override
     public void downloadFilesWithData() {
@@ -78,10 +82,10 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         boolean header = true;
 
         for (File listOfFile : listOfFiles) {
-            if (listOfFile.getName().contains(".csv")) {
+            if (listOfFile.getName().contains(".csv") && !utils.compareDateAndString(listOfFile.getName(), DAYS, formatter)) {
                 labels.put(listOfFile.getName(), counter);
+                counter++;
             }
-            counter++;
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
@@ -126,8 +130,8 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                     stringMapEntry.getValue().entrySet()
                             .stream()
                             .map(entry -> new String[]{entry.getKey(), String.valueOf(entry.getValue()),
-                            String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey())
-                                    .get(entry.getKey()))})
+                                    String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey())
+                                            .get(entry.getKey()))})
                             .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {
@@ -145,18 +149,18 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                     Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
                     set.stream()
                             .map(s -> new String[]{s, String.valueOf(stringMapEntry
-                            .getValue()
-                            .entrySet()
-                            .stream()
-                            .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(s))
-                            .findFirst()
-                            .map(Map.Entry::getValue)
-                            .orElse(-1)), String.valueOf(data.getPredictionNewDeaths().entrySet()
-                            .stream()
-                            .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
-                            .findFirst()
-                            .map(Map.Entry::getValue)
-                            .orElse(null).get(s))})
+                                    .getValue()
+                                    .entrySet()
+                                    .stream()
+                                    .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(s))
+                                    .findFirst()
+                                    .map(Map.Entry::getValue)
+                                    .orElse(-1)), String.valueOf(data.getPredictionNewDeaths().entrySet()
+                                    .stream()
+                                    .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
+                                    .findFirst()
+                                    .map(Map.Entry::getValue)
+                                    .orElse(null).get(s))})
                             .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {
