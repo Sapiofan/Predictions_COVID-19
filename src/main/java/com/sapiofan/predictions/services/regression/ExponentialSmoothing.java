@@ -31,7 +31,7 @@ public class ExponentialSmoothing {
         }
         Map<String, Integer> prediction = minimizationOfError(data, cases);
         for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
-            synchronized (data) {
+            synchronized (data.getPredictionNewCases()) {
                 Map<String, Integer> map = data.getPredictionNewCases()
                         .entrySet()
                         .stream()
@@ -53,7 +53,7 @@ public class ExponentialSmoothing {
         }
         Map<String, Integer> prediction = minimizationOfError(data, deaths);
         for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
-            synchronized (data) {
+            synchronized (data.getPredictionNewDeaths()) {
                 Map<String, Integer> map = data.getPredictionNewDeaths()
                         .entrySet()
                         .stream()
@@ -111,8 +111,8 @@ public class ExponentialSmoothing {
     }
 
     /**
-     * @param data contains all data about calculation and initial information
-     * @param cases of a certain country (new cases or deaths)
+     * @param data     contains all data about calculation and initial information
+     * @param cases    of a certain country (new cases or deaths)
      * @param seasonal initial season coefficients
      * @return data about future predictions calculated through exponential smoothing
      */

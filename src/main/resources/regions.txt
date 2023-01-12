@@ -1,0 +1,198 @@
+Albania#Europe
+Andorra#Europe
+Armenia#Europe
+Austria#Europe
+Azerbaijan#Europe
+Belarus#Europe
+Belgium#Europe
+Bosnia and Herzegovina#Europe
+Bulgaria#Europe
+Croatia#Europe
+Cyprus#Europe
+Czechia#Europe
+Denmark#Europe
+Estonia#Europe
+Finland#Europe
+France#Europe
+Georgia#Europe
+Germany#Europe
+Greece#Europe
+Hungary#Europe
+Iceland#Europe
+Ireland#Europe
+Italy#Europe
+Kazakhstan#Europe
+Latvia#Europe
+Liechtenstein#Europe
+Lithuania#Europe
+Luxembourg#Europe
+North Macedonia#Europe
+Malta#Europe
+Moldova#Europe
+Monaco#Europe
+Montenegro#Europe
+Netherlands#Europe
+Norway#Europe
+Poland#Europe
+Portugal#Europe
+Romania#Europe
+San Marino#Europe
+Serbia#Europe
+Slovakia#Europe
+Slovenia#Europe
+Spain#Europe
+Sweden#Europe
+Switzerland#Europe
+Turkey#Europe
+Ukraine#Europe
+United Kingdom#Europe
+Antigua and Barbuda#Americas
+Bahamas#Americas
+Barbados#Americas
+Belize#Americas
+Canada#Americas
+Costa Rica#Americas
+Cuba#Americas
+Dominica#Americas
+Dominican Republic#Americas
+El Salvador#Americas
+Grenada#Americas
+Guatemala#Americas
+Haiti#Americas
+Honduras#Americas
+Jamaica#Americas
+Mexico#Americas
+Nicaragua#Americas
+Panama#Americas
+Saint Kitts and Nevis#Americas
+Saint Lucia#Americas
+Saint Vincent and the Grenadines#Americas
+Trinidad and Tobago#Americas
+US#Americas
+Argentina#Americas
+Bolivia#Americas
+Brazil#Americas
+Chile#Americas
+Colombia#Americas
+Ecuador#Americas
+Guyana#Americas
+Paraguay#Americas
+Peru#Americas
+Suriname#Americas
+Uruguay#Americas
+Venezuela#Americas
+Australia#Oceania
+Micronesia#Oceania
+Fiji#Oceania
+Kiribati#Oceania
+Marshall Islands#Oceania
+Nauru#Oceania
+New Zealand#Oceania
+Palau#Oceania
+Papua New Guinea#Oceania
+Samoa#Oceania
+Solomon Islands#Oceania
+Tonga#Oceania
+Tuvalu#Oceania
+Vanuatu#Oceania
+Timor-Leste#Oceania
+Afghanistan#Asia
+Armenia#Asia
+Azerbaijan#Asia
+Bahrain#Asia
+Bangladesh#Asia
+Bhutan#Asia
+Brunei#Asia
+Cambodia#Asia
+China#Asia
+Cyprus#Asia
+Egypt#Asia
+Georgia#Asia
+India#Asia
+Indonesia#Asia
+Iran#Asia
+Iraq#Asia
+Israel#Asia
+Japan#Asia
+Jordan#Asia
+Kazakhstan#Asia
+Kuwait#Asia
+Kyrgyzstan#Asia
+Laos#Asia
+Lebanon#Asia
+Malaysia#Asia
+Maldives#Asia
+Mongolia#Asia
+Nepal#Asia
+Korea, North#Asia
+Oman#Asia
+Pakistan#Asia
+Philippines#Asia
+Qatar#Asia
+Russia#Asia
+Saudi Arabia#Asia
+Singapore#Asia
+Korea, South#Asia
+Sri Lanka#Asia
+Syria#Asia
+Taiwan*#Asia
+Tajikistan#Asia
+Thailand#Asia
+Turkey#Asia
+United Arab Emirates#Asia
+Uzbekistan#Asia
+Vietnam#Asia
+Yemen#Asia
+Algeria#Africa
+Angola#Africa
+Benin#Africa
+Botswana#Africa
+Burkina Faso#Africa
+Burundi#Africa
+Cameroon#Africa
+Cabo Verde#Africa
+Central African Republic#Africa
+Chad#Africa
+Comoros#Africa
+Congo (Brazzaville)#Africa
+Congo (Kinshasa)#Africa
+Cote d'Ivoire#Africa
+Djibouti#Africa
+Egypt#Africa
+Equatorial Guinea#Africa
+Eritrea#Africa
+Eswatini#Africa
+Ethiopia#Africa
+Gabon#Africa
+Gambia#Africa
+Ghana#Africa
+Guinea#Africa
+Guinea#Bissau#Africa
+Kenya#Africa
+Lesotho#Africa
+Liberia#Africa
+Libya#Africa
+Madagascar#Africa
+Malawi#Africa
+Mali#Africa
+Mauritania#Africa
+Mauritius#Africa
+Morocco#Africa
+Mozambique#Africa
+Namibia#Africa
+Niger#Africa
+Nigeria#Africa
+Rwanda#Africa
+Senegal#Africa
+Seychelles#Africa
+Sierra Leone#Africa
+Somalia#Africa
+South Africa#Africa
+South Sudan#Africa
+Sudan#Africa
+Tanzania#Africa
+Togo#Africa
+Tunisia#Africa
+Uganda#Africa
+Zambia#Africa
+Zimbabwe#Africa

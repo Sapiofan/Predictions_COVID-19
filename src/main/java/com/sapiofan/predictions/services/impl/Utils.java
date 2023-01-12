@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class Utils {
@@ -18,6 +19,10 @@ public class Utils {
 
     public List<String> getCountries() {
         return fileHandlerService.countriesFromFile();
+    }
+
+    public Map<String, String> getCountriesByRegions() {
+        return fileHandlerService.countriesByRegions();
     }
 
     public boolean compareDateAndString(String sDate, int days, DateTimeFormatter formatter) {

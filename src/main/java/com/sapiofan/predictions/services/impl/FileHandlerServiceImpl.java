@@ -209,11 +209,27 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     @Override
     public List<String> countriesFromFile() {
-        List<String> countries = new ArrayList<>();
+        List<String> countries;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/countries.txt"))) {
             countries = bufferedReader.lines().collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Error while getting countries list: " + e);
+            return null;
+        }
+
+        return countries;
+    }
+
+    @Override
+    public Map<String, String> countriesByRegions() {
+        Map<String, String> countries;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/regions.txt"))) {
+            countries = bufferedReader.lines()
+                    .map(line -> line.split("#"))
+                    .collect(Collectors.toMap(arr -> arr[0], arr -> arr[1], (a, b) -> b));
+        } catch (IOException e) {
+            log.error("Error while getting countries list: " + e);
+            return null;
         }
 
         return countries;

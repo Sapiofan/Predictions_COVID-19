@@ -47,10 +47,15 @@ public class StatisticsImpl implements Statistics {
                     executor.execute(() -> getCountryDataExponential(data, country));
                 }
 
+                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+                for (String area : areas) {
+                    executor.execute(() -> getCountryDataExponential(data, area));
+                }
+                executor.execute(() -> getCountryDataExponential(data, "World"));
+
                 while (true) {
                     if (executor.getActiveCount() == 0) {
                         log.warn("Ended calculating exponential smooth");
-                        getCountryDataExponential(data, "World");
                         log.warn("Start writing to csv");
                         fileHandlerService.writeToCSV(data);
                         log.warn("End writing to csv");
@@ -136,6 +141,16 @@ public class StatisticsImpl implements Statistics {
         Map<String, Integer> worldCases = getWorldCases(data);
 
         data.getNewCases().forEach((key, value) -> value.put("World", worldCases.get(key)));
+
+        Map<String, String> countries = utils.getCountriesByRegions();
+        Set<String> regions = new HashSet<>(countries.values());
+
+        regions.forEach(region -> data.getNewCases()
+                .forEach((key1, value1) -> value1.putAll(getRegionCases(data, countries.entrySet()
+                        .stream()
+                        .filter(stringStringEntry -> stringStringEntry.getValue().equals(region))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList())))));
     }
 
     private void calculateNewDeaths(Data data) {
@@ -175,6 +190,16 @@ public class StatisticsImpl implements Statistics {
                         .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(key))
                         .findFirst()
                         .ifPresent(stringIntegerEntry -> value.put("World", stringIntegerEntry.getValue())));
+
+        Map<String, String> countries = utils.getCountriesByRegions();
+        Set<String> regions = new HashSet<>(countries.values());
+
+        regions.forEach(region -> data.getNewDeaths()
+                .forEach((key1, value1) -> value1.putAll(getRegionDeaths(data, countries.entrySet()
+                        .stream()
+                        .filter(stringStringEntry -> stringStringEntry.getValue().equals(region))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList())))));
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
@@ -283,5 +308,25 @@ public class StatisticsImpl implements Statistics {
                         .values()
                         .stream()
                         .mapToInt(i -> i).sum(), (a, b) -> b));
+    }
+
+    private Map<String, Integer> getRegionCases(Data data, List<String> regionCountries) {
+        Map<String, Integer> regionCasesByDate = new HashMap<>();
+        data.getNewCases().forEach((key, value) -> regionCasesByDate.put(key, regionCountries
+                .stream()
+                .mapToInt(value::get)
+                .sum()));
+
+        return regionCasesByDate;
+    }
+
+    private Map<String, Integer> getRegionDeaths(Data data, List<String> regionCountries) {
+        Map<String, Integer> regionDeathsByDate = new HashMap<>();
+        data.getNewDeaths().forEach((key, value) -> regionDeathsByDate.put(key, regionCountries
+                .stream()
+                .mapToInt(value::get)
+                .sum()));
+
+        return regionDeathsByDate;
     }
 }
