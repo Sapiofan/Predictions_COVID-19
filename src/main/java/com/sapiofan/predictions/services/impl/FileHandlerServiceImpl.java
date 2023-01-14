@@ -95,6 +95,13 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                     }
                     Map<String, Integer> dayCases = data.getConfirmedCases().get(listOfFile.getName());
                     Map<String, Integer> dayDeaths = data.getDeaths().get(listOfFile.getName());
+                    try {
+                        String s = values[3];
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        log.error(values.length+"");
+                        log.error(listOfFile.getName());
+                        log.error(values[0] + " : " + values[1] + " : " + values[2]);
+                    }
                     if (dayCases != null && dayCases.get(values[3]) != null) {
                         dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));

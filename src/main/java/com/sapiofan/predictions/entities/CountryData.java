@@ -18,9 +18,6 @@ public class CountryData {
     private Map<String, Integer> countryCases = new TreeMap<>(dateComparator());
     private Map<String, Integer> countryDeaths = new TreeMap<>(dateComparator());
 
-//    private Map<String, Integer> countryCasesPrediction = new TreeMap<>(dateComparator());
-//    private Map<String, Integer> countryDeathsPrediction = new TreeMap<>(dateComparator());
-
     public CountryData(String country) {
         this.country = country;
     }

@@ -75,7 +75,9 @@ public class StatisticsImpl implements Statistics {
 
     @Override
     public Data getWorldData() {
+        log.warn("Started downloading of csv files from the site");
         fileHandlerService.downloadFilesWithData();
+        log.warn("Ended downloading of csv files from the site");
         Data data = new Data();
         fileHandlerService.readData(data);
         calculateNewCases(data);
@@ -146,11 +148,12 @@ public class StatisticsImpl implements Statistics {
         Set<String> regions = new HashSet<>(countries.values());
 
         regions.forEach(region -> data.getNewCases()
-                .forEach((key1, value1) -> value1.putAll(getRegionCases(data, countries.entrySet()
+                .forEach((key, value) -> value.put(region, getRegionCases(data, countries.entrySet()
                         .stream()
                         .filter(stringStringEntry -> stringStringEntry.getValue().equals(region))
                         .map(Map.Entry::getKey)
-                        .collect(Collectors.toList())))));
+                        .collect(Collectors.toList()))
+                        .get(key))));
     }
 
     private void calculateNewDeaths(Data data) {
@@ -195,11 +198,12 @@ public class StatisticsImpl implements Statistics {
         Set<String> regions = new HashSet<>(countries.values());
 
         regions.forEach(region -> data.getNewDeaths()
-                .forEach((key1, value1) -> value1.putAll(getRegionDeaths(data, countries.entrySet()
+                .forEach((key, value) -> value.put(region, getRegionDeaths(data, countries.entrySet()
                         .stream()
                         .filter(stringStringEntry -> stringStringEntry.getValue().equals(region))
                         .map(Map.Entry::getKey)
-                        .collect(Collectors.toList())))));
+                        .collect(Collectors.toList()))
+                        .get(key))));
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {

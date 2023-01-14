@@ -54,4 +54,9 @@ public class MainController {
 
         return "country";
     }
+
+    @GetMapping("/about")
+    public String about() {
+        return "about";
+    }
 }
