@@ -33,14 +33,14 @@ public class MainController {
 //        sortedMapPrediction.putAll(data.getPredictionNewCases());
 //        sortedMapInit.putAll(data.getNewCases());
         WorldData worldData = fileReaderService.getWorldData();
-        Map<String, Integer> world = new TreeMap<>(worldData.dateComparator());
-        worldData.getWorldCases().forEach((key, value) -> value.entrySet()
-                .stream()
-                .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals("World"))
-                .forEach(stringIntegerEntry -> world.put(key, stringIntegerEntry.getValue())));
+//        Map<String, Integer> world = new TreeMap<>(worldData.dateComparator());
+//        worldData.getWorldCases().forEach((key, value) -> value.entrySet()
+//                .stream()
+//                .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals("World"))
+//                .forEach(stringIntegerEntry -> world.put(key, stringIntegerEntry.getValue())));
 //        model.addAttribute("prediction", sortedMapPrediction);
 //        model.addAttribute("initial", sortedMapInit);
-        model.addAttribute("initial", world);
+        model.addAttribute("initial", worldData.existedWorldCases());
         return "home";
     }
 
