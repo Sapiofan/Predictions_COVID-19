@@ -17,11 +17,15 @@ public class Data {
 
     private Map<String, Map<String, Integer>> predictionNewCases = new TreeMap<>(dateComparator());
 
+    private Map<String, Map<String, Integer>> predictionConfirmedCases = new TreeMap<>(dateComparator());
+
     private Map<String, Map<String, Integer>> deaths = new HashMap<>();
 
     private Map<String, Map<String, Integer>> newDeaths = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Integer>> predictionNewDeaths = new TreeMap<>(dateComparator());
+
+    private Map<String, Map<String, Integer>> predictionConfirmedDeaths = new TreeMap<>(dateComparator());
 
     private Map<String, Integer> labelsByDate = new HashMap<>();
 
@@ -92,13 +96,35 @@ public class Data {
         return labelsByNumber;
     }
 
+    public Map<String, Map<String, Integer>> getPredictionConfirmedCases() {
+        return predictionConfirmedCases;
+    }
+
+    public void setPredictionConfirmedCases(Map<String, Map<String, Integer>> predictionConfirmedCases) {
+        this.predictionConfirmedCases = predictionConfirmedCases;
+    }
+
+    public Map<String, Map<String, Integer>> getPredictionConfirmedDeaths() {
+        return predictionConfirmedDeaths;
+    }
+
+    public void setPredictionConfirmedDeaths(Map<String, Map<String, Integer>> predictionConfirmedDeaths) {
+        this.predictionConfirmedDeaths = predictionConfirmedDeaths;
+    }
+
     public Comparator<String> dateComparator() {
         return new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
                 LocalDate localDate1 = LocalDate.parse(o1.substring(0, o1.indexOf('.')), formatter);
                 LocalDate localDate2 = LocalDate.parse(o2.substring(0, o2.indexOf('.')), formatter);
-                return localDate1.isAfter(localDate2) ? 1 : -1;
+                if (localDate1.isAfter(localDate2)) {
+                    return 1;
+                } else if (localDate1.isEqual(localDate2)) {
+                    return 0;
+                }
+
+                return -1;
             }
         };
     }

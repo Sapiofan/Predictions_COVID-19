@@ -98,7 +98,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                     try {
                         String s = values[3];
                     } catch (ArrayIndexOutOfBoundsException e) {
-                        log.error(values.length+"");
+                        log.error(values.length + "");
                         log.error(listOfFile.getName());
                         log.error(values[0] + " : " + values[1] + " : " + values[2]);
                     }
@@ -133,12 +133,14 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                 try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
-                    csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                    csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
                     stringMapEntry.getValue().entrySet()
                             .stream()
                             .map(entry -> new String[]{entry.getKey(), String.valueOf(entry.getValue()),
                                     String.valueOf(data.getNewDeaths().get(stringMapEntry.getKey())
-                                            .get(entry.getKey()))})
+                                            .get(entry.getKey())),
+                                    String.valueOf(data.getConfirmedCases().get(stringMapEntry.getKey()).get(entry.getKey())),
+                                    String.valueOf(data.getDeaths().get(stringMapEntry.getKey()).get(entry.getKey()))})
                             .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {
@@ -152,7 +154,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                 try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
-                    csvData.add(new String[]{"Country", "Cases", "Deaths"});
+                    csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
                     Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
                     set.stream()
                             .map(s -> new String[]{s, String.valueOf(stringMapEntry
@@ -167,7 +169,9 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                                     .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
                                     .findFirst()
                                     .map(Map.Entry::getValue)
-                                    .orElse(null).get(s))})
+                                    .orElse(null).get(s)),
+                                    String.valueOf(data.getPredictionConfirmedCases().get(stringMapEntry.getKey()).get(s)),
+                                    String.valueOf(data.getPredictionConfirmedDeaths().get(stringMapEntry.getKey()).get(s))})
                             .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {

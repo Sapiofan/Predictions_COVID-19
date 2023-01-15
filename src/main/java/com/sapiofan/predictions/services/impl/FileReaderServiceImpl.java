@@ -40,7 +40,9 @@ public class FileReaderServiceImpl implements FileReaderService {
                 String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
                         .format(endFormatter);
                 Map<String, Integer> dataCases = new HashMap<>();
+                Map<String, Integer> confirmedCases = new HashMap<>();
                 Map<String, Integer> dataDeaths = new HashMap<>();
+                Map<String, Integer> confirmedDeaths = new HashMap<>();
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
                     if (header) {
@@ -52,10 +54,14 @@ public class FileReaderServiceImpl implements FileReaderService {
                             || area.equals("Oceania") || area.equals("Africa")) {
                         dataCases.put(area, Integer.parseInt(values[1]));
                         dataDeaths.put(area, Integer.parseInt(values[2]));
+                        confirmedCases.put(area, Integer.parseInt(values[3]));
+                        confirmedDeaths.put(area, Integer.parseInt(values[4]));
                     }
                 }
                 worldData.getWorldCases().put(date, dataCases);
                 worldData.getWorldDeaths().put(date, dataDeaths);
+                worldData.getConfirmedCases().put(date, confirmedCases);
+                worldData.getConfirmedDeaths().put(date, confirmedDeaths);
             } catch (IOException e) {
                 log.error("Something went wrong while reading CSV files for getting world statistics: " + e);
             }
@@ -84,6 +90,8 @@ public class FileReaderServiceImpl implements FileReaderService {
                     if (values[0].equals(country)) {
                         countryData.getCountryCases().put(date, Integer.parseInt(values[1]));
                         countryData.getCountryDeaths().put(date, Integer.parseInt(values[2]));
+                        countryData.getCountryConfirmedCases().put(date, Integer.parseInt(values[3]));
+                        countryData.getCountryConfirmedDeaths().put(date, Integer.parseInt(values[4]));
                         break;
                     }
                 }

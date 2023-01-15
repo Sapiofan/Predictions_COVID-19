@@ -19,7 +19,11 @@ public class WorldData {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
+    private TreeMap<String, Map<String, Integer>> confirmedCases = new TreeMap<>(dateComparator());
+
     private TreeMap<String, Map<String, Integer>> worldCases = new TreeMap<>(dateComparator());
+
+    private TreeMap<String, Map<String, Integer>> confirmedDeaths = new TreeMap<>(dateComparator());
 
     private TreeMap<String, Map<String, Integer>> worldDeaths = new TreeMap<>(dateComparator());
 

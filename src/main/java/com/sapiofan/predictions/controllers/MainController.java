@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class MainController {
+public class MainController { // add regions confirmed cases for existed data
 
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 

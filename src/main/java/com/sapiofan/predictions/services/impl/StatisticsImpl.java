@@ -82,6 +82,7 @@ public class StatisticsImpl implements Statistics {
         fileHandlerService.readData(data);
         calculateNewCases(data);
         calculateNewDeaths(data);
+        addRegionsToConfirmedData(data);
 
         return data;
     }
@@ -204,6 +205,15 @@ public class StatisticsImpl implements Statistics {
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toList()))
                         .get(key))));
+    }
+
+    private void addRegionsToConfirmedData(Data data) {
+        Map<String, String> countries = utils.getCountriesByRegions();
+        Set<String> regions = new HashSet<>(countries.values());
+
+        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
+        map.putAll(data.getConfirmedCases());
+
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
@@ -332,5 +342,39 @@ public class StatisticsImpl implements Statistics {
                 .sum()));
 
         return regionDeathsByDate;
+    }
+
+    private void calculatePredictedConfirmedCases(Data data) {
+        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, Integer>> result = new TreeMap<>(data.dateComparator());
+        map.putAll(data.getConfirmedCases());
+        Map<String, Integer> lastDayData = map.lastEntry().getValue();
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+            Map<String, Integer> predictedDate = new HashMap<>();
+            for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
+                predictedDate.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue() +
+                        lastDayData.get(stringIntegerEntry.getKey()));
+            }
+            result.put(stringMapEntry.getKey(), predictedDate);
+            lastDayData = predictedDate;
+        }
+        data.setPredictionConfirmedCases(result);
+    }
+
+    private void calculatePredictedConfirmedDeaths(Data data) {
+        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, Integer>> result = new TreeMap<>(data.dateComparator());
+        map.putAll(data.getDeaths());
+        Map<String, Integer> lastDayData = map.lastEntry().getValue();
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
+            Map<String, Integer> predictedDate = new HashMap<>();
+            for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
+                predictedDate.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue() +
+                        lastDayData.get(stringIntegerEntry.getKey()));
+            }
+            result.put(stringMapEntry.getKey(), predictedDate);
+            lastDayData = predictedDate;
+        }
+        data.setPredictionConfirmedDeaths(result);
     }
 }
