@@ -40,7 +40,7 @@ public class FileReaderServiceImpl implements FileReaderService {
                 String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
                         .format(endFormatter);
                 Map<String, Integer> dataCases = new HashMap<>();
-                Map<String, Integer> confirmedCases = new HashMap<>();
+                Map<String, Long> confirmedCases = new HashMap<>();
                 Map<String, Integer> dataDeaths = new HashMap<>();
                 Map<String, Integer> confirmedDeaths = new HashMap<>();
                 String[] values;
@@ -54,8 +54,8 @@ public class FileReaderServiceImpl implements FileReaderService {
                             || area.equals("Oceania") || area.equals("Africa")) {
                         dataCases.put(area, Integer.parseInt(values[1]));
                         dataDeaths.put(area, Integer.parseInt(values[2]));
-                        confirmedCases.put(area, Integer.parseInt(values[3]));
-                        confirmedDeaths.put(area, Integer.parseInt(values[4]));
+//                        confirmedCases.put(area, Long.parseLong(values[3]));
+//                        confirmedDeaths.put(area, Integer.parseInt(values[4]));
                     }
                 }
                 worldData.getWorldCases().put(date, dataCases);

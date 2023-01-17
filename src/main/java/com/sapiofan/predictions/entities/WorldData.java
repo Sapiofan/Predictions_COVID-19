@@ -19,7 +19,7 @@ public class WorldData {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-    private TreeMap<String, Map<String, Integer>> confirmedCases = new TreeMap<>(dateComparator());
+    private TreeMap<String, Map<String, Long>> confirmedCases = new TreeMap<>(dateComparator());
 
     private TreeMap<String, Map<String, Integer>> worldCases = new TreeMap<>(dateComparator());
 
@@ -47,35 +47,35 @@ public class WorldData {
                 true, worldDeaths.lastKey(), false));
     }
 
-    public Map<String, Map<String, Integer>> existedWorldCasesWeekly() {
+    public TreeMap<String, Map<String, Integer>> existedWorldCasesWeekly() {
         TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, Map<String, Integer>> existedWorldCases = existedWorldCases();
 
         return calculateCasesWeekly(map, existedWorldCases);
     }
 
-    public Map<String, Map<String, Integer>> predictedWorldCasesWeekly() {
+    public TreeMap<String, Map<String, Integer>> predictedWorldCasesWeekly() {
         TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, Map<String, Integer>> predictedWorldCases = predictedWorldCases();
 
         return calculateCasesWeekly(map, predictedWorldCases);
     }
 
-    public Map<String, Map<String, Integer>> existedWorldDeathsWeekly() {
+    public TreeMap<String, Map<String, Integer>> existedWorldDeathsWeekly() {
         TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, Map<String, Integer>> existedWorldDeaths = existedWorldDeaths();
 
         return calculateCasesWeekly(map, existedWorldDeaths);
     }
 
-    public Map<String, Map<String, Integer>> predictedWorldDeathsWeekly() {
+    public TreeMap<String, Map<String, Integer>> predictedWorldDeathsWeekly() {
         TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, Map<String, Integer>> predictedWorldDeaths = predictedWorldDeaths();
 
         return calculateCasesWeekly(map, predictedWorldDeaths);
     }
 
-    private Map<String, Map<String, Integer>> calculateCasesWeekly(TreeMap<String, Map<String,
+    private TreeMap<String, Map<String, Integer>> calculateCasesWeekly(TreeMap<String, Map<String,
             Integer>> map, TreeMap<String, Map<String, Integer>> cases) {
         Map<String, Integer> areas = worldCases.lastEntry()
                 .getValue()
@@ -98,6 +98,87 @@ public class WorldData {
         }
 
         return map;
+    }
+
+    public TreeMap<String, Map<String, Long>> existedConfirmedCases() {
+        return new TreeMap<>(confirmedCases.subMap(confirmedCases.firstKey(),
+                true, LocalDate.now().format(formatter), false));
+    }
+
+    public TreeMap<String, Map<String, Long>> predictedConfirmedCases() {
+        return new TreeMap<>(confirmedCases.subMap(LocalDate.now().format(formatter),
+                true, confirmedCases.lastKey(), false));
+    }
+
+    public TreeMap<String, Map<String, Integer>> existedConfirmedDeaths() {
+        return new TreeMap<>(confirmedDeaths.subMap(confirmedDeaths.firstKey(),
+                true, LocalDate.now().format(formatter), false));
+    }
+
+    public TreeMap<String, Map<String, Integer>> predictedConfirmedDeaths() {
+        return new TreeMap<>(confirmedDeaths.subMap(LocalDate.now().format(formatter),
+                true, confirmedDeaths.lastKey(), false));
+    }
+
+    public TreeMap<String, Map<String, Long>> existedConfirmedCasesWeakly() {
+        TreeMap<String, Map<String, Long>> map = new TreeMap<>(dateComparator());
+        TreeMap<String, Map<String, Long>> existedConfirmedCases = existedConfirmedCases();
+        calculateConfirmedCasesWeekly(map, existedConfirmedCases);
+
+        return map;
+    }
+
+    public TreeMap<String, Map<String, Long>> predictedConfirmedCasesWeakly() {
+        TreeMap<String, Map<String, Long>> map = new TreeMap<>(dateComparator());
+        TreeMap<String, Map<String, Long>> predictedConfirmedCases = predictedConfirmedCases();
+
+        calculateConfirmedCasesWeekly(map, predictedConfirmedCases);
+
+        return map;
+    }
+
+    private void calculateConfirmedCasesWeekly(TreeMap<String, Map<String, Long>> confirmedCases,
+                                               TreeMap<String, Map<String, Long>> map) {
+        int counter = 0;
+        for (Map.Entry<String, Map<String, Long>> stringMapEntry : confirmedCases.entrySet()) {
+            if(counter == 6) {
+                map.put(stringMapEntry.getKey(), stringMapEntry.getValue());
+                counter = 0;
+                continue;
+            }
+            counter++;
+        }
+    }
+
+    public TreeMap<String, Map<String, Integer>> existedConfirmedDeathsWeakly() {
+        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
+        TreeMap<String, Map<String, Integer>> existedConfirmedDeaths = existedConfirmedDeaths();
+
+        calculateConfirmedDeathsWeekly(existedConfirmedDeaths, map);
+
+        return map;
+    }
+
+    public TreeMap<String, Map<String, Integer>> predictedConfirmedDeathsWeakly() {
+        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(dateComparator());
+        TreeMap<String, Map<String, Integer>> predictedConfirmedDeaths = predictedConfirmedDeaths();
+
+        calculateConfirmedDeathsWeekly(predictedConfirmedDeaths, map);
+
+        return map;
+    }
+
+    private void calculateConfirmedDeathsWeekly(TreeMap<String, Map<String, Integer>> confirmedDeaths,
+                                               TreeMap<String, Map<String, Integer>> map) {
+        int counter = 0;
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : confirmedDeaths.entrySet()) {
+            if(counter == 6) {
+                map.put(stringMapEntry.getKey(), stringMapEntry.getValue());
+                counter = 0;
+                continue;
+            }
+            counter++;
+        }
     }
 
     public Comparator<String> dateComparator() {

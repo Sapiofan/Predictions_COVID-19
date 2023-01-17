@@ -167,7 +167,7 @@ Gabon#Africa
 Gambia#Africa
 Ghana#Africa
 Guinea#Africa
-Guinea#Bissau#Africa
+Guinea-Bissau#Africa
 Kenya#Africa
 Lesotho#Africa
 Liberia#Africa

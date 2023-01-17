@@ -93,7 +93,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         header = false;
                         continue;
                     }
-                    Map<String, Integer> dayCases = data.getConfirmedCases().get(listOfFile.getName());
+                    Map<String, Long> dayCases = data.getConfirmedCases().get(listOfFile.getName());
                     Map<String, Integer> dayDeaths = data.getDeaths().get(listOfFile.getName());
                     try {
                         String s = values[3];
@@ -106,12 +106,12 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));
                     } else if (dayCases != null && dayCases.get(values[3]) == null) {
-                        dayCases.put(values[3], Integer.parseInt(values[7]));
+                        dayCases.put(values[3], Long.parseLong(values[7]));
                         dayDeaths.put(values[3], Integer.parseInt(values[8]));
                     } else {
                         dayCases = new HashMap<>();
                         dayDeaths = new HashMap<>();
-                        dayCases.put(values[3], Integer.parseInt(values[7]));
+                        dayCases.put(values[3], Long.parseLong(values[7]));
                         dayDeaths.put(values[3], Integer.parseInt(values[8]));
                         data.getConfirmedCases().put(listOfFile.getName(), dayCases);
                         data.getDeaths().put(listOfFile.getName(), dayDeaths);
@@ -155,24 +155,16 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
-                    Set<String> set = new TreeSet<>(stringMapEntry.getValue().keySet());
-                    set.stream()
-                            .map(s -> new String[]{s, String.valueOf(stringMapEntry
-                                    .getValue()
-                                    .entrySet()
-                                    .stream()
-                                    .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(s))
-                                    .findFirst()
-                                    .map(Map.Entry::getValue)
-                                    .orElse(-1)), String.valueOf(data.getPredictionNewDeaths().entrySet()
-                                    .stream()
-                                    .filter(mapEntry -> mapEntry.getKey().equals(stringMapEntry.getKey()))
-                                    .findFirst()
-                                    .map(Map.Entry::getValue)
-                                    .orElse(null).get(s)),
-                                    String.valueOf(data.getPredictionConfirmedCases().get(stringMapEntry.getKey()).get(s)),
-                                    String.valueOf(data.getPredictionConfirmedDeaths().get(stringMapEntry.getKey()).get(s))})
-                            .forEach(csvData::add);
+                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{stringIntegerEntry.getKey(), String.valueOf(stringIntegerEntry.getValue()),
+                            String.valueOf(data.getPredictionNewDeaths()
+                                    .get(stringMapEntry.getKey())
+                                    .get(stringIntegerEntry.getKey())),
+                            String.valueOf(data.getPredictionConfirmedCases()
+                                    .get(stringMapEntry.getKey())
+                                    .get(stringIntegerEntry.getKey())),
+                            String.valueOf(data.getPredictionConfirmedDeaths()
+                                    .get(stringMapEntry.getKey())
+                                    .get(stringIntegerEntry.getKey()))}).forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {
                     log.error("Error while writing data to CSV file: " + e);

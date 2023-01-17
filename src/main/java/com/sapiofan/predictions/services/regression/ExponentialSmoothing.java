@@ -5,6 +5,7 @@ import org.apache.commons.math3.util.Precision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -17,7 +18,7 @@ public class ExponentialSmoothing {
     private static final Logger log = LoggerFactory.getLogger(ExponentialSmoothing.class);
 
     private final int SEASONAL_PERIOD = 7;
-    private final int EXISTED_PERIOD_AFTER_SEASONAL = 113;
+    private int EXISTED_PERIOD_AFTER_SEASONAL;
     private final int SEASONAL_REPETITION = 3;
 
     private double ALPHA = 0;
@@ -29,6 +30,8 @@ public class ExponentialSmoothing {
         if (cases == null || cases.size() == 0) {
             return;
         }
+        EXISTED_PERIOD_AFTER_SEASONAL = Objects.requireNonNull(new File("src/main/resources/data/").list()).length
+                - SEASONAL_PERIOD - 2;
         Map<String, Integer> prediction = minimizationOfError(data, cases);
         for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
             synchronized (data.getPredictionNewCases()) {

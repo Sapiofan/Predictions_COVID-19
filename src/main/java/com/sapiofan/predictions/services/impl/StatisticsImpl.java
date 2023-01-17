@@ -8,15 +8,11 @@ import com.sapiofan.predictions.services.regression.LinearRegression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +51,8 @@ public class StatisticsImpl implements Statistics {
 //
 //                while (true) {
 //                    if (executor.getActiveCount() == 0) {
+//                        calculatePredictedConfirmedCases(data);
+//                        calculatePredictedConfirmedDeaths(data);
 //                        log.warn("Ended calculating exponential smooth");
 //                        log.warn("Start writing to csv");
 //                        fileHandlerService.writeToCSV(data);
@@ -117,20 +115,20 @@ public class StatisticsImpl implements Statistics {
 
         boolean flag = false;
 
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getConfirmedCases().entrySet()) {
+        for (Map.Entry<String, Map<String, Long>> stringMapEntry : data.getConfirmedCases().entrySet()) {
 
-            Map<String, Integer> previousDay = data.getConfirmedCases().get(LocalDate.parse(stringMapEntry.getKey()
+            Map<String, Long> previousDay = data.getConfirmedCases().get(LocalDate.parse(stringMapEntry.getKey()
                             .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
                     .minusDays(1L).format(formatter) + ".csv");
 
             Map<String, Integer> newCasesDay = new HashMap<>();
-            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+            for (Map.Entry<String, Long> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
                 if (previousDay == null) {
                     flag = true;
                     break;
                 }
                 newCasesDay.put(stringIntegerEntry.getKey(),
-                        Math.max(stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()), 0));
+                        (int) Math.max(stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()), 0));
             }
             if (flag) {
                 flag = false;
@@ -210,10 +208,38 @@ public class StatisticsImpl implements Statistics {
     private void addRegionsToConfirmedData(Data data) {
         Map<String, String> countries = utils.getCountriesByRegions();
         Set<String> regions = new HashSet<>(countries.values());
+        for (String region : regions) {
+            calculateConfirmedCasesForRegion(region, countries, data);
+            calculateConfirmedDeathsForRegion(region, countries, data);
+        }
+    }
 
-        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
-        map.putAll(data.getConfirmedCases());
+    private void calculateConfirmedCasesForRegion(String region, Map<String, String> countries, Data data) {
+        long sum = 0;
+        for (Map.Entry<String, Map<String, Long>> stringMapEntry : data.getConfirmedCases().entrySet()) {
+            for (Map.Entry<String, Long> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                if (countries.get(stringIntegerEntry.getKey()) != null
+                        && countries.get(stringIntegerEntry.getKey()).equals(region)) {
+                    sum += stringIntegerEntry.getValue();
+                }
+            }
+            stringMapEntry.getValue().put(region, sum);
+            sum = 0;
+        }
+    }
 
+    private void calculateConfirmedDeathsForRegion(String region, Map<String, String> countries, Data data) {
+        int sum = 0;
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
+            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                if (countries.get(stringIntegerEntry.getKey()) != null
+                        && countries.get(stringIntegerEntry.getKey()).equals(region)) {
+                    sum += stringIntegerEntry.getValue();
+                }
+            }
+            stringMapEntry.getValue().put(region, sum);
+            sum = 0;
+        }
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
@@ -345,13 +371,13 @@ public class StatisticsImpl implements Statistics {
     }
 
     private void calculatePredictedConfirmedCases(Data data) {
-        TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
-        TreeMap<String, Map<String, Integer>> result = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, Long>> map = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, Long>> result = new TreeMap<>(data.dateComparator());
         map.putAll(data.getConfirmedCases());
-        Map<String, Integer> lastDayData = map.lastEntry().getValue();
+        Map<String, Long> lastDayData = map.lastEntry().getValue();
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
-            Map<String, Integer> predictedDate = new HashMap<>();
-            for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
+            Map<String, Long> predictedDate = new HashMap<>();
+            for (Map.Entry<String, Long> stringIntegerEntry : lastDayData.entrySet()) {
                 predictedDate.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue() +
                         lastDayData.get(stringIntegerEntry.getKey()));
             }
@@ -366,7 +392,7 @@ public class StatisticsImpl implements Statistics {
         TreeMap<String, Map<String, Integer>> result = new TreeMap<>(data.dateComparator());
         map.putAll(data.getDeaths());
         Map<String, Integer> lastDayData = map.lastEntry().getValue();
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewDeaths().entrySet()) {
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewDeaths().entrySet()) {
             Map<String, Integer> predictedDate = new HashMap<>();
             for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
                 predictedDate.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue() +

@@ -11,13 +11,13 @@ public class Data {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private Map<String, Map<String, Integer>> confirmedCases = new HashMap<>();
+    private Map<String, Map<String, Long>> confirmedCases = new HashMap<>();
 
     private Map<String, Map<String, Integer>> newCases = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Integer>> predictionNewCases = new TreeMap<>(dateComparator());
 
-    private Map<String, Map<String, Integer>> predictionConfirmedCases = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, Long>> predictionConfirmedCases = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Integer>> deaths = new HashMap<>();
 
@@ -32,11 +32,11 @@ public class Data {
     private Map<Integer, String> labelsByNumber = new HashMap<>();
 
 
-    public Map<String, Map<String, Integer>> getConfirmedCases() {
+    public Map<String, Map<String, Long>> getConfirmedCases() {
         return confirmedCases;
     }
 
-    public void setConfirmedCases(Map<String, Map<String, Integer>> confirmedCases) {
+    public void setConfirmedCases(Map<String, Map<String, Long>> confirmedCases) {
         this.confirmedCases = confirmedCases;
     }
 
@@ -96,11 +96,11 @@ public class Data {
         return labelsByNumber;
     }
 
-    public Map<String, Map<String, Integer>> getPredictionConfirmedCases() {
+    public Map<String, Map<String, Long>> getPredictionConfirmedCases() {
         return predictionConfirmedCases;
     }
 
-    public void setPredictionConfirmedCases(Map<String, Map<String, Integer>> predictionConfirmedCases) {
+    public void setPredictionConfirmedCases(Map<String, Map<String, Long>> predictionConfirmedCases) {
         this.predictionConfirmedCases = predictionConfirmedCases;
     }
 
