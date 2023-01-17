@@ -155,7 +155,8 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
-                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{stringIntegerEntry.getKey(), String.valueOf(stringIntegerEntry.getValue()),
+                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{stringIntegerEntry.getKey(),
+                            String.valueOf(stringIntegerEntry.getValue()),
                             String.valueOf(data.getPredictionNewDeaths()
                                     .get(stringMapEntry.getKey())
                                     .get(stringIntegerEntry.getKey())),

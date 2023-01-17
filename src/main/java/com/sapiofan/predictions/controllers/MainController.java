@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class MainController { // do proper calculation of confirmed cases
+public class MainController {
 
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
@@ -20,7 +20,7 @@ public class MainController { // do proper calculation of confirmed cases
     @GetMapping("/")
     public String home(Model model) {
         WorldData worldData = fileReaderService.getWorldData();
-        model.addAttribute("initial", worldData.existedWorldDeaths());
+        model.addAttribute("initial", worldData.existedConfirmedCases());
         return "home";
     }
 
