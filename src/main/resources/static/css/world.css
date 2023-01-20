@@ -1,0 +1,282 @@
+article {
+    margin: 50px 100px;
+}
+
+h2 {
+    font-size: 40px;
+}
+
+.details {
+    margin: 20px 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* CSS rules are kept repetitive so that you can get CSS rules for each button easily :) */
+
+.row
+{
+    display: table-row;
+    margin-left: 100px;
+}
+
+.toggle-button-cover
+{
+    display: table-cell;
+    position: relative;
+    width: 200px;
+    box-sizing: border-box;
+}
+
+.button-cover
+{
+    background-color: #fff;
+    box-shadow: 0 10px 20px -8px #c5d6d6;
+    border-radius: 4px;
+}
+
+.button-cover, .knobs, .layer
+{
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.button
+{
+    position: relative;
+    top: 50%;
+    width: 150px;
+    height: 36px;
+    overflow: hidden;
+}
+
+
+.button.b2
+{
+    border-radius: 2px;
+}
+
+.checkbox
+{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.knobs
+{
+    z-index: 2;
+}
+
+.layer
+{
+    width: 100%;
+    background-color: #ebf7fc;
+    transition: 0.3s ease all;
+    z-index: 1;
+}
+
+
+/* Button 10 */
+#button-12 .knobs:before, #button-12 .knobs:after, #button-12 .knobs span,
+#button-11 .knobs:before, #button-11 .knobs:after, #button-11 .knobs span,
+#button-14 .knobs:before, #button-14 .knobs:after, #button-14 .knobs span,
+#button-15 .knobs:before, #button-15 .knobs:after, #button-15 .knobs span,
+#button-16 .knobs:before, #button-16 .knobs:after, #button-16 .knobs span
+{
+    position: absolute;
+    top: 4px;
+    width: 60px;
+    height: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1;
+    padding: 9px 4px;
+    border-radius: 2px;
+    transition: 0.3s ease all;
+}
+
+#button-12 .knobs:before,
+#button-11 .knobs:before,
+#button-14 .knobs:before,
+#button-15 .knobs:before,
+#button-16 .knobs:before
+{
+    content: '';
+    left: 4px;
+    background-color: #03A9F4;
+}
+
+#button-12 .knobs:after
+{
+    content: 'Total';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-11 .knobs:after
+{
+    content: 'Weekly';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-14 .knobs:after
+{
+    content: 'Total';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-15 .knobs:after
+{
+    content: 'Weekly';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-16 .knobs:after
+{
+    content: 'Deaths';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-12 .knobs span,
+#button-11 .knobs span,
+#button-14 .knobs span,
+#button-15 .knobs span,
+#button-16 .knobs span
+{
+    display: inline-block;
+    left: 4px;
+    color: #fff;
+    z-index: 1;
+}
+
+#button-12 .checkbox:checked + .knobs span,
+#button-11 .checkbox:checked + .knobs span,
+#button-14 .checkbox:checked + .knobs span,
+#button-15 .checkbox:checked + .knobs span,
+#button-16 .checkbox:checked + .knobs span
+{
+    color: #4e4e4e;
+}
+
+#button-12 .checkbox:checked + .knobs:before,
+#button-11 .checkbox:checked + .knobs:before,
+#button-14 .checkbox:checked + .knobs:before,
+#button-15 .checkbox:checked + .knobs:before,
+#button-16 .checkbox:checked + .knobs:before
+{
+    left: 79px;
+    background-color: #F44336;
+}
+
+#button-12 .checkbox:checked + .knobs:after,
+#button-11 .checkbox:checked + .knobs:after,
+#button-14 .checkbox:checked + .knobs:after,
+#button-15 .checkbox:checked + .knobs:after,
+#button-16 .checkbox:checked + .knobs:after
+{
+    color: #fff;
+}
+
+#button-12 .checkbox:checked ~ .layer,
+#button-11 .checkbox:checked ~ .layer,
+#button-14 .checkbox:checked ~ .layer,
+#button-15 .checkbox:checked ~ .layer,
+#button-16 .checkbox:checked ~ .layer
+{
+    background-color: #fcebeb;
+}
+
+
+.flex-wrapper {
+    display: flex;
+}
+
+.charts {
+    margin: 40px 0;
+}
+
+h3 {
+    font-size: 24px;
+}
+
+.charts {
+    margin-top: 50px;
+}
+
+.cases-data {
+    margin-bottom: 50px;
+    margin-top: -50px;
+}
+
+.cases {
+    font-size: 50px;
+    margin-bottom: 10px;
+    margin-top: 50px;
+}
+
+h4 {
+    font-size: 20px;
+}
+
+#regions {
+    margin: 50px;
+}
+
+.regions-header {
+    text-align: center;
+    font-size: 36px;
+
+}
+
+.region-filters {
+    height: 50px;
+    width: 50%;
+    display: flex;
+    margin: auto;
+}
+
+.region-row {
+    margin-top: 50px;
+    display: flex;
+    width: 100%;
+}
+
+.region {
+    width: 50%;
+    height: 40vh;
+}
+
+.region-name {
+    font-size: 24px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.region-cases {
+    margin: 20px 0;
+    font-size: 18px;
+}
+
+.africa {
+    margin: auto;
+}
+
+.updating {
+    color: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    font-size: 14px;
+    margin-top: 10px;
+}

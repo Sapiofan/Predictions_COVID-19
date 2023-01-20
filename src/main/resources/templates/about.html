@@ -1,0 +1,67 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <meta
+            name="description"
+            content="COVID-19 Statistic"
+    />
+
+    <meta property="og:title" content="About"/>
+    <meta property="og:type" content="website"/>
+    <link rel="icon" th:href="@{/img/virus.png}">
+
+    <link th:href="@{/css/general.css}" rel="stylesheet" />
+    <link th:href="@{/css/about.css}" rel="stylesheet" />
+
+    <title>About</title>
+
+</head>
+<body>
+<header>
+    <div class="logo">
+        <img src="/img/logo.png" class="logo-image">
+    </div>
+    <nav>
+        <a href="/">World data</a>
+        <a href="/countries">Countries data</a>
+        <a href="/about">About</a>
+    </nav>
+</header>
+<article>
+    <h1>About</h1>
+    <section id="site-description">
+        <div class="about-image">
+            <img src="/img/about-image.png">
+        </div>
+        <p class="desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras metus lacus,
+            porta nec lobortis vel, sodales eget ligula. Vestibulum eget pharetra massa.
+            Sed consectetur nibh nunc, a tincidunt dolor molestie sit amet. Nunc vel tempor mauris. Duis sollicitudin lobortis magna,
+            a pharetra nunc malesuada a. Sed vitae est mi. Fusce dapibus eros sed ex posuere,
+            ut dictum risus malesuada. Cras consectetur blandit dignissim. Aliquam elementum vestibulum erat eget malesuada. </p>
+    </section>
+    <section class="head" id="overview">
+        <button type="button" class="collapsible">Overview</button>
+        <div class="content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras metus lacus,
+                porta nec lobortis vel, sodales eget ligula. Vestibulum eget pharetra massa.
+                Sed consectetur nibh nunc, a tincidunt dolor molestie sit amet. Nunc vel tempor mauris. Duis sollicitudin lobortis magna,
+                a pharetra nunc malesuada a. Sed vitae est mi. Fusce dapibus eros sed ex posuere,
+                ut dictum risus malesuada. Cras consectetur blandit dignissim. Aliquam elementum vestibulum erat eget malesuada.</p>
+        </div>
+    </section>
+    <section class="head" id="sources">
+        <button type="button" class="collapsible">Sources</button>
+        <div class="content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras metus lacus,
+                porta nec lobortis vel, sodales eget ligula. Vestibulum eget pharetra massa.
+                Sed consectetur nibh nunc, a tincidunt dolor molestie sit amet. Nunc vel tempor mauris. Duis sollicitudin lobortis magna,
+                a pharetra nunc malesuada a. Sed vitae est mi. Fusce dapibus eros sed ex posuere,
+                ut dictum risus malesuada. Cras consectetur blandit dignissim. Aliquam elementum vestibulum erat eget malesuada.</p>
+        </div>
+    </section>
+</article>
+</body>
+<script type="text/javascript" th:src="@{/js/about.js}"></script>
+</html>

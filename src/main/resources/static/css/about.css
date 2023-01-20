@@ -1,0 +1,77 @@
+/*
+////////////////////////////////
+/////////////about//////////////
+////////////////////////////////
+*/
+
+h1 {
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 38px;
+    margin-top: 20px;
+    color: #01212c;
+}
+
+#site-description {
+    display: flex;
+    margin: 100px 40px;
+}
+
+.about-image {
+    width: 600px;
+    height: 450px;
+}
+
+.about-image img {
+    width: 100%;
+    height: 100%;
+}
+
+.desc {
+    margin: 30px;
+    font-size: 24px;
+    font-family: 'Times New Roman', Times, serif;
+    width: 50vw;
+}
+
+.head {
+    margin: 20px 50px;
+}
+
+.collapsible {
+    color: #073B4C;
+    cursor: pointer;
+    padding: 18px;
+    width: 20%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 36px;
+}
+
+.active:hover, .collapsible:hover {
+    color: #01212c;
+    transition: 0.3s;
+}
+
+.collapsible:after {
+    content: '\002B';
+    color: #073B4C;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+}
+
+.active:after {
+    content: "\2212";
+}
+
+.content {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    background-color: #f1f1f1;
+    font-size: 22px;
+    margin: 0 0 0 20px;
+}

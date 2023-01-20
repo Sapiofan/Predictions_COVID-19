@@ -32,7 +32,7 @@ public class MainController {
     @GetMapping("/countries")
     public String getCountriesStatistics() {
 
-        return "country";
+        return "countries";
     }
 
     @GetMapping("/about")

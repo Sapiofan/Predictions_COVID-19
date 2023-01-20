@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Data
-public class WorldData {
+public class WorldData { // confirmed cases
 
     private static final Logger log = LoggerFactory.getLogger(WorldData.class);
 

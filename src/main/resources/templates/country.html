@@ -1,10 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Country statistic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <meta
+            name="description"
+            content="COVID-19 Statistic"
+    />
+
+    <meta property="og:title" content="About"/>
+    <meta property="og:type" content="website"/>
+    <link rel="icon" th:href="@{/img/virus.png}">
+
+    <link th:href="@{/css/general.css}" rel="stylesheet" />
+    <link th:href="@{/css/country.css}" rel="stylesheet" />
+
+    <title>Countries</title>
 </head>
 <body>
-  <p>Country statistic</p>
+<div th:insert="header :: header"></div>
+<article>
+    <section id="brief">
+        <h2 class="dark-blue">Country</h2>
+        <p class="details">For last 90 days, there have been confirmed <span class="orange">1 000 000 cases</span>
+            of <span class="green">COVID-19</span> and <span class="red">10 000 deaths</span>.
+            For the next 30 days have been predicted approximately
+            <span class="orange">100 000 new cases</span> and <span class="red">1 000 new deaths</span>.</p>
+    </section>
+    <section id="charts">
+        <div class="flex-wrapper">
+            <h3 class="dark-blue">Country situation</h3>
+            <div class="row">
+                <div class="toggle-button-cover">
+                    <div class="button-cover">
+                        <div class="button b2" id="button-10">
+                            <input type="checkbox" class="checkbox">
+                            <div class="knobs">
+                                <span>Existed</span>
+                            </div>
+                            <div class="layer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle-button-cover">
+                    <div class="button-cover">
+                        <div class="button b2" id="button-11">
+                            <input type="checkbox" class="checkbox">
+                            <div class="knobs">
+                                <span>New</span>
+                            </div>
+                            <div class="layer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle-button-cover">
+                    <div class="button-cover">
+                        <div class="button b2" id="button-12">
+                            <input type="checkbox" class="checkbox">
+                            <div class="knobs">
+                                <span>Daily</span>
+                            </div>
+                            <div class="layer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex-wrapper charts">
+            <div class="cases-data">
+                <div class="info dark-blue">
+                    <h1 class="cases">1000000</h1>
+                    <h4>Confirmed cases</h4>
+                    <h1 class="cases">10000</h1>
+                    <h4>Predicted cases</h4>
+                </div>
+                <div id="container-chart"></div>
+            </div>
+        </div>
+        <div class="flex-wrapper">
+            <div class="death-data">
+                <div class="info dark-blue">
+                    <h1 class="cases">1000000</h1>
+                    <h4>Deaths</h4>
+                    <h1 class="cases">10000</h1>
+                    <h4>Predicted deaths</h4>
+                </div>
+            </div>
+            <div id="container-chart2"></div>
+        </div>
+        </div>
+    </section>
+</article>
 </body>
 </html>
