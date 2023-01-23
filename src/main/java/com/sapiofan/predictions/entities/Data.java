@@ -10,19 +10,19 @@ public class Data {
 
     private Map<String, Map<String, Long>> confirmedCases = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> newCases = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, Integer>> newCases = new HashMap<>();
 
-    private Map<String, Map<String, List<Integer>>> predictionNewCases = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, List<Integer>>> predictionNewCases = new HashMap<>();
 
-    private Map<String, Map<String, Long>> predictionConfirmedCases = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, Long>> predictionConfirmedCases = new HashMap<>();
 
     private Map<String, Map<String, Integer>> deaths = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> newDeaths = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, Integer>> newDeaths = new HashMap<>();
 
-    private Map<String, Map<String, List<Integer>>> predictionNewDeaths = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, List<Integer>>> predictionNewDeaths = new HashMap<>();
 
-    private Map<String, Map<String, Integer>> predictionConfirmedDeaths = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, Integer>> predictionConfirmedDeaths = new HashMap<>();
 
     private Map<String, Integer> labelsByDate = new HashMap<>();
 

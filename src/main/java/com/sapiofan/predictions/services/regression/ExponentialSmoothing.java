@@ -126,24 +126,36 @@ public class ExponentialSmoothing {
         double alpha = ALPHA, betta = BETTA, gamma = GAMMA;
 
         // initial level
-        level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1)) / seasonalCopy.get(0), 5));
+        if(seasonalCopy.get(0) != 0) {
+            level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1))
+                    / seasonalCopy.get(0), 5));
+        } else {
+            level.add(0.0);
+        }
+
 
         // initial trend
-        trend.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1)) / seasonalCopy.get(0)
-                - cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD)) / seasonalCopy.get(SEASONAL_PERIOD - 1), 5));
+        if(seasonalCopy.get(0) != 0 && seasonalCopy.get(SEASONAL_PERIOD - 1) != 0) {
+            trend.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1)) / seasonalCopy.get(0)
+                    - cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD)) / seasonalCopy.get(SEASONAL_PERIOD - 1), 5));
+        } else {
+            trend.add(0.0);
+        }
 
         Map<Integer, String> numberLabels = data.getLabelsByNumber();
-
-        Map<String, Integer> predictionsPast = new TreeMap<>(data.dateComparator());
 
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1))
                     / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
-            level.add(Precision.round((alpha * (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1))
+            double num;
+            if(seasonalCopy.get(i + 1) == 0) {
+                num = cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1);
+            } else {
+                num = 0.0;
+            }
+            level.add(Precision.round((alpha * num
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
             trend.add(Precision.round((betta * (level.get(i + 1) - level.get(i)) + (1 - betta) * trend.get(i)), 7));
-            predictionsPast.put(numberLabels.get(SEASONAL_PERIOD + i + 1),
-                    (int) Precision.round(((level.get(i + 1) + trend.get(i + 1)) * seasonalCopy.get(i + 1)), 5));
         }
 
         seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + EXISTED_PERIOD_AFTER_SEASONAL - 1))
@@ -183,12 +195,21 @@ public class ExponentialSmoothing {
         double alpha = constants.get(0), betta = constants.get(1), gamma = constants.get(2);
 
         // initial level
-        level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1))
-                / seasonalCopy.get(0), 5));
+        if(seasonalCopy.get(0) != 0) {
+            level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1))
+                    / seasonalCopy.get(0), 5));
+        } else {
+            level.add(0.0);
+        }
+
 
         // initial trend
-        trend.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1)) / seasonalCopy.get(0)
-                - cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD)) / seasonalCopy.get(SEASONAL_PERIOD - 1), 5));
+        if(seasonalCopy.get(0) != 0 && seasonalCopy.get(SEASONAL_PERIOD - 1) != 0) {
+            trend.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD + 1)) / seasonalCopy.get(0)
+                    - cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD)) / seasonalCopy.get(SEASONAL_PERIOD - 1), 5));
+        } else {
+            trend.add(0.0);
+        }
 
         Map<Integer, String> numberLabels = data.getLabelsByNumber();
 
@@ -197,7 +218,13 @@ public class ExponentialSmoothing {
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1))
                     / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
-            level.add(Precision.round((alpha * (cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1))
+            double num;
+            if(seasonalCopy.get(i + 1) == 0) {
+                num = cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1);
+            } else {
+                num = 0.0;
+            }
+            level.add(Precision.round((alpha * num
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
             trend.add(Precision.round((betta * (level.get(i + 1) - level.get(i)) + (1 - betta) * trend.get(i)), 7));
             predictionsPast.put(numberLabels.get(SEASONAL_PERIOD + i + 1),
@@ -208,18 +235,24 @@ public class ExponentialSmoothing {
     }
 
     private List<Double> calculateInitialSeasonal(Data data, TreeMap<String, Integer> cases) {
-        List<Integer> firstMonthCases = cases.entrySet()
+        List<Integer> seasonalPeriodCases = cases.entrySet()
                 .stream()
                 .filter(stringIntegerEntry -> data.getLabelsByDate().get(stringIntegerEntry.getKey()) <= SEASONAL_PERIOD)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
 
-        return firstMonthCases.stream()
-                .map(firstMonthCase -> Precision.round(firstMonthCase / (Precision.round(firstMonthCases
-                        .stream()
-                        .mapToDouble(v -> v)
-                        .sum() / firstMonthCases.size(), 7)), 7))
-                .collect(Collectors.toList());
+        List<Double> list = new ArrayList<>();
+        for (Integer seasonalPeriodCase : seasonalPeriodCases) {
+            double num = Precision.round(seasonalPeriodCases.stream().mapToDouble(v -> v).sum()
+                    / seasonalPeriodCases.size(), 7);
+            if(num != 0) {
+                list.add(Precision.round(seasonalPeriodCase / num, 7));
+            } else {
+                list.add(0.0);
+            }
+        }
+
+        return list;
     }
 
     private TreeMap<String, Integer> sortCasesByDate(Data data, Map<String, Integer> cases) {

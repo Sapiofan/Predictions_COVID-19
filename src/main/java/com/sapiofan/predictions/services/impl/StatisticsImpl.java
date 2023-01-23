@@ -44,13 +44,7 @@ public class StatisticsImpl implements Statistics {
 
                 log.warn("Started calculating exponential smooth");
                 for (String country : utils.getCountries()) {
-                    Thread thread = new Thread(() -> getCountryDataExponential(data, country));
-                    thread.setName(country);
-                    thread.start();
-
-//                    if(country.equals("France") || country.equals("Mexico") || country.equals("New Zealand")
-//                            || country.equals("Afghanistan") || country.equals("Egypt"))
-//                    executor.execute(() -> getCountryDataExponential(data, country));
+                    executor.execute(() -> getCountryDataExponential(data, country));
                 }
 
                 Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
@@ -60,8 +54,8 @@ public class StatisticsImpl implements Statistics {
                 executor.execute(() -> getCountryDataExponential(data, "World"));
 
                 while (true) {
-//                    if (executor.getActiveCount() == 0) {
-                    if (Thread.getAllStackTraces().keySet().stream().noneMatch(Thread::isAlive)) {
+                    if (executor.getActiveCount() == 0) {
+//                    if (Thread.getAllStackTraces().keySet().stream().noneMatch(Thread::isAlive)) {
                         handlePredictedCases(data);
                         log.warn("Ended calculating exponential smooth");
                         log.warn("Start writing to csv");

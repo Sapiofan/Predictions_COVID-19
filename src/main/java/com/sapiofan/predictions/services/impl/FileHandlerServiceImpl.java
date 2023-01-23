@@ -52,6 +52,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         LocalDate localDate2 = LocalDate.now();
 
         int count = fileNames.size() < DAYS ? DAYS : Math.min((int) ChronoUnit.DAYS.between(localDate1, localDate2) + 1, DAYS);
+        count = Math.max(count, 15);
 
         for (int i = 0; i < count; i++) {
 

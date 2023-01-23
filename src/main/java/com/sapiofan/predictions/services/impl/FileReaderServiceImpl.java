@@ -2,6 +2,7 @@ package com.sapiofan.predictions.services.impl;
 
 import com.opencsv.CSVReader;
 import com.sapiofan.predictions.entities.CountryData;
+import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.entities.WorldData;
 import com.sapiofan.predictions.services.FileReaderService;
 import org.slf4j.Logger;
@@ -13,8 +14,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class FileReaderServiceImpl implements FileReaderService {
@@ -31,9 +31,23 @@ public class FileReaderServiceImpl implements FileReaderService {
         File statisticsFolder = new File("src/main/resources/templates/predictions");
         File[] listOfFiles = statisticsFolder.listFiles();
         boolean header = true;
+        List<String> names = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.list())));
+        names.remove(names.stream().filter(n -> n.contains("Read")).findFirst().get());
+        names.sort((o1, o2) -> {
+            LocalDate localDate1 = LocalDate.parse(o1.substring(0, o1.indexOf('.')), initFormatter);
+            LocalDate localDate2 = LocalDate.parse(o2.substring(0, o2.indexOf('.')), initFormatter);
+            if (localDate1.isAfter(localDate2)) {
+                return 1;
+            } else if (localDate1.isEqual(localDate2)) {
+                return 0;
+            }
+
+            return -1;
+        });
+        String lastDay = names.get(0);
 
         for (File listOfFile : listOfFiles) {
-            if (listOfFile.getName().contains("Read")) {
+            if (listOfFile.getName().contains("Read") || listOfFile.getName().equals(lastDay)) {
                 continue;
             }
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
