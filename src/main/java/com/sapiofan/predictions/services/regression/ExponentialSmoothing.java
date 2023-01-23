@@ -32,10 +32,10 @@ public class ExponentialSmoothing {
         }
         EXISTED_PERIOD_AFTER_SEASONAL = Objects.requireNonNull(new File("src/main/resources/data/").list()).length
                 - SEASONAL_PERIOD - 2;
-        Map<String, Integer> prediction = minimizationOfError(data, cases);
-        for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
+        Map<String, List<Integer>> prediction = minimizationOfError(data, cases);
+        for (Map.Entry<String, List<Integer>> stringIntegerEntry : prediction.entrySet()) {
             synchronized (data.getPredictionNewCases()) {
-                Map<String, Integer> map = data.getPredictionNewCases()
+                Map<String, List<Integer>> map = data.getPredictionNewCases()
                         .entrySet()
                         .stream()
                         .filter(stringMapEntry ->
@@ -54,10 +54,10 @@ public class ExponentialSmoothing {
         if (deaths == null || deaths.size() == 0) {
             return;
         }
-        Map<String, Integer> prediction = minimizationOfError(data, deaths);
-        for (Map.Entry<String, Integer> stringIntegerEntry : prediction.entrySet()) {
+        Map<String, List<Integer>> prediction = minimizationOfError(data, deaths);
+        for (Map.Entry<String, List<Integer>> stringIntegerEntry : prediction.entrySet()) {
             synchronized (data.getPredictionNewDeaths()) {
-                Map<String, Integer> map = data.getPredictionNewDeaths()
+                Map<String, List<Integer>> map = data.getPredictionNewDeaths()
                         .entrySet()
                         .stream()
                         .filter(stringMapEntry ->
@@ -74,7 +74,7 @@ public class ExponentialSmoothing {
     /**
      * optimization to find the minimum error by changing alpha, betta, gamma constants
      */
-    private Map<String, Integer> minimizationOfError(Data data, Map<String, Integer> cases) {
+    private Map<String, List<Integer>> minimizationOfError(Data data, Map<String, Integer> cases) {
         TreeMap<String, Integer> sortedCasesByDate = sortCasesByDate(data, cases);
         List<Double> seasonal = calculateInitialSeasonal(data, sortedCasesByDate);
         List<Double> seasonalCopy = new ArrayList<>(seasonal);
@@ -119,7 +119,7 @@ public class ExponentialSmoothing {
      * @param seasonal initial season coefficients
      * @return data about future predictions calculated through exponential smoothing
      */
-    public Map<String, Integer> predictionForCountry(Data data, Map<String, Integer> cases, List<Double> seasonal) {
+    public Map<String, List<Integer>> predictionForCountry(Data data, Map<String, Integer> cases, List<Double> seasonal) {
         List<Double> seasonalCopy = new ArrayList<>(seasonal);
         List<Double> level = new ArrayList<>();
         List<Double> trend = new ArrayList<>();
@@ -150,18 +150,30 @@ public class ExponentialSmoothing {
                 / level.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)
                 + (1 - gamma) * seasonalCopy.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)), 7));
 
-        Map<String, Integer> predictionsFuture = new HashMap<>();
+        Map<String, List<Integer>> predictionsFuture = new HashMap<>();
 
         String day = LocalDate.now().format(formatter);
         for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {
-            predictionsFuture.put(day + ".csv", Math.max((int) Precision.round(((level.get(level.size() - 1)
+            List<Integer> predictionRange = new ArrayList<>(3);
+            predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - 1)
                     + trend.get(trend.size() - 1))
                     * seasonalCopy.get(seasonalCopy.size() - (SEASONAL_PERIOD * SEASONAL_REPETITION - i) - 1)), 1), 0));
+            predictionRange.add(lowBound(predictionRange.get(0)));
+            predictionRange.add(highBound(predictionRange.get(0)));
+            predictionsFuture.put(day + ".csv", predictionRange);
 
             day = LocalDate.parse(day, formatter).plusDays(1L).format(formatter);
         }
 
         return predictionsFuture;
+    }
+
+    private Integer lowBound(Integer predictedCases) {
+        return Math.max(predictedCases - (int) (1.96 * error), 0);
+    }
+
+    private Integer highBound(Integer predictedCases) {
+        return predictedCases + (int) (1.96 * error);
     }
 
     public double predictionForCountryError(Data data, Map<String, Integer> cases, List<Double> seasonal, List<Double> constants) {

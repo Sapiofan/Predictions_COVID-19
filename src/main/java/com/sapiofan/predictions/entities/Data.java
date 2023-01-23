@@ -2,10 +2,7 @@ package com.sapiofan.predictions.entities;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Data {
 
@@ -15,7 +12,7 @@ public class Data {
 
     private Map<String, Map<String, Integer>> newCases = new TreeMap<>(dateComparator());
 
-    private Map<String, Map<String, Integer>> predictionNewCases = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, List<Integer>>> predictionNewCases = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Long>> predictionConfirmedCases = new TreeMap<>(dateComparator());
 
@@ -23,7 +20,7 @@ public class Data {
 
     private Map<String, Map<String, Integer>> newDeaths = new TreeMap<>(dateComparator());
 
-    private Map<String, Map<String, Integer>> predictionNewDeaths = new TreeMap<>(dateComparator());
+    private Map<String, Map<String, List<Integer>>> predictionNewDeaths = new TreeMap<>(dateComparator());
 
     private Map<String, Map<String, Integer>> predictionConfirmedDeaths = new TreeMap<>(dateComparator());
 
@@ -72,19 +69,19 @@ public class Data {
         this.labelsByDate = labelsByDate;
     }
 
-    public Map<String, Map<String, Integer>> getPredictionNewCases() {
+    public Map<String, Map<String, List<Integer>>> getPredictionNewCases() {
         return predictionNewCases;
     }
 
-    public void setPredictionNewCases(Map<String, Map<String, Integer>> predictionNewCases) {
+    public void setPredictionNewCases(Map<String, Map<String, List<Integer>>> predictionNewCases) {
         this.predictionNewCases = predictionNewCases;
     }
 
-    public Map<String, Map<String, Integer>> getPredictionNewDeaths() {
+    public Map<String, Map<String, List<Integer>>> getPredictionNewDeaths() {
         return predictionNewDeaths;
     }
 
-    public void setPredictionNewDeaths(Map<String, Map<String, Integer>> predictionNewDeaths) {
+    public void setPredictionNewDeaths(Map<String, Map<String, List<Integer>>> predictionNewDeaths) {
         this.predictionNewDeaths = predictionNewDeaths;
     }
 

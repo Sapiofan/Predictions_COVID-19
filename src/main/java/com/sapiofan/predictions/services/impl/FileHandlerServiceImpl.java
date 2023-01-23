@@ -149,23 +149,27 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             });
         }
 
-        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
             executor.execute(() -> {
                 try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
-                    csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
+                    csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths",
+                            "Low bound", "High bound"});
                     stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{stringIntegerEntry.getKey(),
-                            String.valueOf(stringIntegerEntry.getValue()),
+                            String.valueOf(stringIntegerEntry.getValue().get(0)),
                             String.valueOf(data.getPredictionNewDeaths()
                                     .get(stringMapEntry.getKey())
-                                    .get(stringIntegerEntry.getKey())),
+                                    .get(stringIntegerEntry.getKey()).get(0)),
                             String.valueOf(data.getPredictionConfirmedCases()
                                     .get(stringMapEntry.getKey())
                                     .get(stringIntegerEntry.getKey())),
                             String.valueOf(data.getPredictionConfirmedDeaths()
                                     .get(stringMapEntry.getKey())
-                                    .get(stringIntegerEntry.getKey()))}).forEach(csvData::add);
+                                    .get(stringIntegerEntry.getKey())),
+                            String.valueOf(stringIntegerEntry.getValue().get(1)),
+                            String.valueOf(stringIntegerEntry.getValue().get(2))})
+                            .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {
                     log.error("Error while writing data to CSV file: " + e);
