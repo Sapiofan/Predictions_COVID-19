@@ -5,6 +5,10 @@ anychart.onDocumentReady(function () {
     // map data for the first series, take x from the zero column and value from the first column of data set
     var firstSeriesData = dataSet.mapAs({ x: 0, value: 1 });
 
+    var secondSeriesData = dataSet.mapAs({ x: 0, value: 2 });
+
+    var thirdSeriesData = dataSet.mapAs({ x: 0, value: 3 });
+
     // create line chart
     var chart = anychart.line();
 
@@ -31,10 +35,32 @@ anychart.onDocumentReady(function () {
 
     // create first series with mapped data
     var firstSeries = chart.line(firstSeriesData);
-    // firstSeries.name('Brandy');
+    firstSeries.name('Existed data and prediction');
     firstSeries.color("black");
     firstSeries.hovered().markers().enabled(true).type('circle').size(4);
     firstSeries
+        .tooltip()
+        .position('right')
+        .anchor('left-center')
+        .offsetX(5)
+        .offsetY(5);
+
+    var secondSeries = chart.line(secondSeriesData);
+    firstSeries.name('Low bound');
+    secondSeries.color("blue");
+    secondSeries.hovered().markers().enabled(true).type('circle').size(4);
+    secondSeries
+        .tooltip()
+        .position('right')
+        .anchor('left-center')
+        .offsetX(5)
+        .offsetY(5);
+
+    var thirdSeries = chart.line(thirdSeriesData);
+    thirdSeries.name('High bound');
+    thirdSeries.color("blue");
+    thirdSeries.hovered().markers().enabled(true).type('circle').size(4);
+    thirdSeries
         .tooltip()
         .position('right')
         .anchor('left-center')
@@ -56,77 +82,70 @@ anychart.onDocumentReady(function () {
 });
 
 anychart.onDocumentReady(function () {
-    // create column chart
+    // create data set on our data
+    var dataSet = anychart.data.set(getDataColumn());
+
+    // map data for the first series, take x from the zero column and value from the first column of data set
+    var firstSeriesData = dataSet.mapAs({ x: 0, value: 1 });
+
+    // map data for the second series, take x from the zero column and value from the second column of data set
+    var secondSeriesData = dataSet.mapAs({ x: 0, value: 2 });
+
+    // map data for the second series, take x from the zero column and value from the third column of data set
+    var thirdSeriesData = dataSet.mapAs({ x: 0, value: 3 });
+
+    // create bar chart
     var chart = anychart.column();
 
     // turn on chart animation
     chart.animation(true);
 
+    // force chart to stack values by Y scale.
+    chart.yScale().stackMode('value');
+
     // set chart title text settings
-    chart.title('Covid-19 new cases for last 4 months');
+    chart.title('Top 10 Cosmetic Products by Revenue');
+    chart.title().padding([0, 0, 5, 0]);
 
-    // create area series with passed data
-    // var series = chart.column([
-    //     ['Rouge', '80540'],
-    //     ['Foundation', '94190'],
-    //     ['Mascara', '102610'],
-    //     ['Lip gloss', '110430'],
-    //     ['Lipstick', '128000'],
-    //     ['Nail polish', '143760'],
-    //     ['Eyebrow pencil', '170670'],
-    //     ['Eyeliner', '213210'],
-    //     ['Eyeshadows', '249980']
-    // ]);
+    // helper function to setup label settings for all series
+    var setupSeriesLabels = function (series, name) {
+        series.name(name).stroke('3 #fff 1');
+        series.hovered().stroke('3 #fff 1');
+    };
 
-    // console.log([
-    //     ['Rouge', '80540'],
-    //     ['Foundation', '94190'],
-    //     ['Mascara', '102610'],
-    //     ['Lip gloss', '110430'],
-    //     ['Lipstick', '128000'],
-    //     ['Nail polish', '143760'],
-    //     ['Eyebrow pencil', '170670'],
-    //     ['Eyeliner', '213210'],
-    //     ['Eyeshadows', '249980']
-    // ]);
+    // temp variable to store series instance
+    var series;
 
-    // console.log(getData());
+    // create first series with mapped data
+    series = chart.column(firstSeriesData);
+    setupSeriesLabels(series, 'Florida');
 
-    var series = chart.column(getData());
+    // create second series with mapped data
+    series = chart.column(secondSeriesData);
+    setupSeriesLabels(series, 'Texas');
 
-    // set series tooltip settings
-    series.tooltip().titleFormat('{%X}');
+    // create third series with mapped data
+    series = chart.column(thirdSeriesData);
+    setupSeriesLabels(series, 'Arizona');
 
-    series
-        .tooltip()
-        .position('center-top')
-        .anchor('center-bottom')
-        .offsetX(0)
-        .offsetY(5)
-        .format('{%Value}{groupsSeparator: } cases');
 
-    // set scale minimum
-    chart.yScale().minimum(0);
-
+    // turn on legend
+    chart.legend().enabled(true).fontSize(13).padding([0, 0, 20, 0]);
     // set yAxis labels formatter
     chart.yAxis().labels().format('{%Value}{groupsSeparator: }');
 
-    // tooltips position and interactivity settings
-    chart.tooltip().positionMode('point');
+    // set titles for axes
+    chart.xAxis().title('Products by Revenue');
+    chart.yAxis().title('Revenue in Dollars');
+
+    // set interactivity hover
     chart.interactivity().hoverMode('by-x');
 
-    // axes titles
-    chart.xAxis().title('Date');
-    chart.yAxis().title('New cases of Covid-19');
+    chart.tooltip().valuePrefix('$').displayMode('union');
 
     // set container id for the chart
     chart.container('column-chart');
 
     // initiate chart drawing
     chart.draw();
-
-    var trial = document.getElementsByClassName("anychart-credits")
-    for (let i = 0; i < trial.length; i++) {
-        trial[i].remove();
-    }
 });

@@ -156,20 +156,27 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths",
-                            "Low bound", "High bound"});
-                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{stringIntegerEntry.getKey(),
-                            String.valueOf(stringIntegerEntry.getValue().get(0)),
-                            String.valueOf(data.getPredictionNewDeaths()
-                                    .get(stringMapEntry.getKey())
-                                    .get(stringIntegerEntry.getKey()).get(0)),
-                            String.valueOf(data.getPredictionConfirmedCases()
-                                    .get(stringMapEntry.getKey())
-                                    .get(stringIntegerEntry.getKey())),
-                            String.valueOf(data.getPredictionConfirmedDeaths()
-                                    .get(stringMapEntry.getKey())
-                                    .get(stringIntegerEntry.getKey())),
-                            String.valueOf(stringIntegerEntry.getValue().get(1)),
-                            String.valueOf(stringIntegerEntry.getValue().get(2))})
+                            "Low bound cases", "High bound cases", "Low bound deaths", "High bound deaths"});
+                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{
+                                    stringIntegerEntry.getKey(),
+                                    String.valueOf(stringIntegerEntry.getValue().get(0)),
+                                    String.valueOf(data.getPredictionNewDeaths()
+                                            .get(stringMapEntry.getKey())
+                                            .get(stringIntegerEntry.getKey()).get(0)),
+                                    String.valueOf(data.getPredictionConfirmedCases()
+                                            .get(stringMapEntry.getKey())
+                                            .get(stringIntegerEntry.getKey())),
+                                    String.valueOf(data.getPredictionConfirmedDeaths()
+                                            .get(stringMapEntry.getKey())
+                                            .get(stringIntegerEntry.getKey())),
+                                    String.valueOf(stringIntegerEntry.getValue().get(1)),
+                                    String.valueOf(stringIntegerEntry.getValue().get(2)),
+                                    String.valueOf(data.getPredictionNewDeaths()
+                                            .get(stringMapEntry.getKey())
+                                            .get(stringIntegerEntry.getKey()).get(1)),
+                                    String.valueOf(data.getPredictionNewDeaths()
+                                            .get(stringMapEntry.getKey())
+                                            .get(stringIntegerEntry.getKey()).get(2))})
                             .forEach(csvData::add);
                     writer.writeAll(csvData);
                 } catch (IOException e) {

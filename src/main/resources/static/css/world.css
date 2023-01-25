@@ -6,10 +6,15 @@ h2 {
     font-size: 40px;
 }
 
+#brief {
+    margin-bottom: 50px;
+}
+
 .details {
     margin: 20px 0;
     font-size: 28px;
     font-weight: 600;
+    text-align: center;
 }
 
 /* CSS rules are kept repetitive so that you can get CSS rules for each button easily :) */
@@ -17,7 +22,7 @@ h2 {
 .row
 {
     display: table-row;
-    margin-left: 100px;
+    margin-left: 150px;
 }
 
 .toggle-button-cover
@@ -206,15 +211,11 @@ h2 {
 }
 
 .charts {
-    margin: 40px 0;
+    margin: 120px 0 50px 0;
 }
 
 h3 {
-    font-size: 24px;
-}
-
-.charts {
-    margin-top: 50px;
+    font-size: 28px;
 }
 
 .cases-data {
@@ -230,6 +231,10 @@ h3 {
 
 h4 {
     font-size: 20px;
+}
+
+.info {
+    padding: 100px 0 0 0;
 }
 
 #regions {
@@ -279,4 +284,29 @@ h4 {
     text-align: center;
     font-size: 14px;
     margin-top: 10px;
+}
+
+
+table {
+    border-collapse: collapse;
+    border: 2px black solid;
+    font: 12px sans-serif;
+}
+
+td {
+    border: 1px black solid;
+    padding: 5px;
+}
+.container-area {
+    width: 900px;
+    height: 600px;
+}
+html,
+body,
+#column-chart,
+#line-chart {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }

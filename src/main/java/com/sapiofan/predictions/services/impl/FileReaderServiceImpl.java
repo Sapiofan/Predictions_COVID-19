@@ -54,12 +54,12 @@ public class FileReaderServiceImpl implements FileReaderService {
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
                 String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
                         .format(endFormatter);
-                Map<String, Integer> dataCases = new HashMap<>();
-                Map<String, List<Integer>> dataCasesBounds = new HashMap<>();
-                Map<String, Long> confirmedCases = new HashMap<>();
-                Map<String, Integer> dataDeaths = new HashMap<>();
-                Map<String, List<Integer>> dataDeathsBounds = new HashMap<>();
-                Map<String, Integer> confirmedDeaths = new HashMap<>();
+                Map<String, List<Integer>> dataCases = new HashMap<>();
+//                Map<String, List<Integer>> dataCasesBounds = new HashMap<>();
+                Map<String, List<Long>> confirmedCases = new HashMap<>();
+                Map<String, List<Integer>> dataDeaths = new HashMap<>();
+//                Map<String, List<Integer>> dataDeathsBounds = new HashMap<>();
+                Map<String, List<Integer>> confirmedDeaths = new HashMap<>();
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
                     if (header) {
@@ -69,32 +69,31 @@ public class FileReaderServiceImpl implements FileReaderService {
                     String area = values[0];
                     if (area.equals("World") || area.equals("Europe") || area.equals("Americas") || area.equals("Asia")
                             || area.equals("Oceania") || area.equals("Africa")) {
-                        dataCases.put(area, Integer.parseInt(values[1]));
-                        dataDeaths.put(area, Integer.parseInt(values[2]));
-                        confirmedCases.put(area, Long.parseLong(values[3]));
-                        confirmedDeaths.put(area, Integer.parseInt(values[4]));
-//                        List<Integer> listCases = new ArrayList<>();
-//                        List<Integer> listDeaths = new ArrayList<>();
-//                        try {
-//                            listCases.add(Integer.parseInt(values[1]));
-//                            listCases.add(Integer.parseInt(values[5]));
-//                            listCases.add(Integer.parseInt(values[6]));
-//                            dataCasesBounds.put(area, listCases);
-//                        } catch (ArrayIndexOutOfBoundsException e) {}
-//                        listDeaths.add(Integer.parseInt(values[7]));
-//                        listDeaths.add(Integer.parseInt(values[8]));
-//                        dataDeathsBounds.put(area, listDeaths);
+                        List<Integer> cases = new ArrayList<>();
+                        List<Integer> deaths = new ArrayList<>();
+                        List<Long> cCases = new ArrayList<>();
+                        List<Integer> cDeaths = new ArrayList<>();
+                        cases.add(Integer.parseInt(values[1]));
+                        deaths.add(Integer.parseInt(values[2]));
+                        cCases.add(Long.parseLong(values[3]));
+                        cDeaths.add(Integer.parseInt(values[4]));
+                        if(values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
+                            cases.add(Integer.parseInt(values[5]));
+                            cases.add(Integer.parseInt(values[6]));
+                            deaths.add(Integer.parseInt(values[7]));
+                            deaths.add(Integer.parseInt(values[8]));
+
+                        }
+                        dataCases.put(area, cases);
+                        dataDeaths.put(area, deaths);
+                        confirmedCases.put(area, cCases);
+                        confirmedDeaths.put(area, cDeaths);
                     }
                 }
                 worldData.getWorldCases().put(date, dataCases);
                 worldData.getWorldDeaths().put(date, dataDeaths);
                 worldData.getConfirmedCases().put(date, confirmedCases);
                 worldData.getConfirmedDeaths().put(date, confirmedDeaths);
-//                if(!today.isAfter(LocalDate.parse(listOfFile.getName()
-//                        .substring(0, listOfFile.getName().indexOf('.')), initFormatter))) {
-//                    worldData.getWorldCasesBounds().put(date, dataCasesBounds);
-//                    worldData.getWorldDeathsBounds().put(date, dataDeathsBounds);
-//                }
             } catch (IOException e) {
                 log.error("Something went wrong while reading CSV files for getting world statistics: " + e);
             }
@@ -121,10 +120,24 @@ public class FileReaderServiceImpl implements FileReaderService {
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
                     if (values[0].equals(country)) {
-                        countryData.getCountryCases().put(date, Integer.parseInt(values[1]));
-                        countryData.getCountryDeaths().put(date, Integer.parseInt(values[2]));
-                        countryData.getCountryConfirmedCases().put(date, Integer.parseInt(values[3]));
-                        countryData.getCountryConfirmedDeaths().put(date, Integer.parseInt(values[4]));
+                        List<Integer> cases = new ArrayList<>();
+                        List<Integer> deaths = new ArrayList<>();
+                        List<Integer> cCases = new ArrayList<>();
+                        List<Integer> cDeaths = new ArrayList<>();
+                        cases.add(Integer.parseInt(values[1]));
+                        deaths.add(Integer.parseInt(values[2]));
+                        cCases.add(Integer.parseInt(values[3]));
+                        cDeaths.add(Integer.parseInt(values[4]));
+                        if(values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
+                            cases.add(Integer.parseInt(values[5]));
+                            cases.add(Integer.parseInt(values[6]));
+                            deaths.add(Integer.parseInt(values[7]));
+                            deaths.add(Integer.parseInt(values[8]));
+                        }
+                        countryData.getCountryCases().put(date, cases);
+                        countryData.getCountryDeaths().put(date, deaths);
+                        countryData.getCountryConfirmedCases().put(date, cCases);
+                        countryData.getCountryConfirmedDeaths().put(date, cDeaths);
                         break;
                     }
                 }

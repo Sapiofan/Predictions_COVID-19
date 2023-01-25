@@ -9,33 +9,6 @@
     <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
 
-    <style type="text/css">
-        table {
-            border-collapse: collapse;
-            border: 2px black solid;
-            font: 12px sans-serif;
-        }
-
-        td {
-            border: 1px black solid;
-            padding: 5px;
-        }
-        .container-area {
-            width: 700px;
-            height: 500px;
-        }
-        html,
-        body,
-        #column-chart,
-        #line-chart {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-    </style>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
@@ -219,6 +192,45 @@
             counter += 1;
         }
 
+        for (const [key, value] of Object.entries(prediction)) {
+            var date = [];
+            date[0] = key;
+            // console.log(`${key}`);
+            for (const [key1, value1] of Object.entries(value)) {
+                if(key1 == "World") {
+                    date[1] = value1[0];
+                    date[2] = value1[1];
+                    date[3] = value1[2];
+                    break;
+                }
+                // console.log(`${key1}: ${value1}`);
+            }
+            array[counter] = date;
+            counter += 1;
+        }
+
+        // for (const [key, value] of Object.entries(prediction)) {
+        //     var date = [];
+        //     date[0] = key;
+        //     console.log(key);
+        //     for (const [key1, value1] of Object.entries(value)) {
+        //         if(key1 == "World") {
+        //             var counter2 = 1;
+        //             let i = 0;
+        //             while (i < value1.length) {
+        //                 date[counter2] = value1[i];
+        //                 counter2 += 1;
+        //                 i += 1;
+        //             }
+        //             break;
+        //         }
+        //         // console.log(`${key1}: ${value1}`);
+        //     }
+        //     console.log(date);
+        //     array[counter] = date;
+        //     counter += 1;
+        // }
+
         // console.log(array);
         // for (const [key, value] of Object.entries(prediction)) {
         //     // var date = new Array(Object.keys(value).length);
@@ -267,6 +279,46 @@
         //     ['2008', 15.7, 21.6, 10, 3.7],
         //     ['2009', 12.0, 22.5, 8.9, 1.5]
         // ];
+    }
+
+    function getDataColumn() {
+        var array = [];
+        var counter = 0;
+        for (const [key, value] of Object.entries(initial)) {
+            var date = [];
+            date[0] = key;
+            // console.log(`${key}`);
+            for (const [key1, value1] of Object.entries(value)) {
+                if(key1 == "World") {
+                    date[1] = value1;
+                    date[2] = value1;
+                    date[3] = value1;
+                    break;
+                }
+                // console.log(`${key1}: ${value1}`);
+            }
+            array[counter] = date;
+            counter += 1;
+        }
+
+        for (const [key, value] of Object.entries(prediction)) {
+            var date = [];
+            date[0] = key;
+            // console.log(`${key}`);
+            for (const [key1, value1] of Object.entries(value)) {
+                if(key1 == "World") {
+                    date[1] = value1[0];
+                    date[2] = value1[1];
+                    date[3] = value1[2];
+                    break;
+                }
+                // console.log(`${key1}: ${value1}`);
+            }
+            array[counter] = date;
+            counter += 1;
+        }
+
+        return array;
     }
 </script>
 <script type="text/javascript" th:src="@{/js/charts.js}"></script>
