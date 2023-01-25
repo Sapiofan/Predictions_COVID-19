@@ -27,48 +27,90 @@
             <div class="filter-block">
                 <div class="custom-select" style="width:130px; margin: 10px;">
                     <select>
-                        <option>18.12.2022</option>
-                        <option>19.12.2022</option>
-                        <option>20.12.2022</option>
-                        <option>21.12.2022</option>
-                        <option>22.12.2022</option>
+                        <div th:each="map : ${dates}">
+                            <option th:name="${map.key}" th:if="${map.key != yesterday}" th:text="${map.key}"></option>
+                            <option th:name="${map.key}" th:unless="${map.key != yesterday}" th:text="${map.key}" selected></option>
+                        </div>
                     </select>
                 </div>
                 <div class="search">
-                    <input type="text" placeholder="Search for country..." class="search-inp">
+                    <input type="text" id="searchId" onkeyup="searching()" placeholder="Search for country..."
+                           class="search-inp">
                     <input type="button" value="Search" class="search-but">
                 </div>
             </div>
         </div>
         <h2>Situation by country</h2>
-        <table cellpadding="0" cellspacing="0" class="heat-map table">
+        <div id="table"></div>
+        <table id="table-countries" cellpadding="0" cellspacing="0" class="heat-map table">
             <tr>
-                <th class="blue">Country</th>
-                <th class="orange">Cases, total</th>
-                <th class="orange">New cases</th>
-                <th class="red">Deaths, total</th>
-                <th class="red">New deaths</th>
-                <th class="green">Population</th>
+                <th class="blue">Country <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="orange">Cases, total <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="orange">New cases <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="red">Deaths, total <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="red">New deaths <img class="sort-ic" src="/img/sort-sign.png"></th>
             </tr>
-            <tr class="global stats-row">
-                <td class="stats-title">Global</td>
-                <td>1004</td>
-                <td>945</td>
-                <td>294</td>
-                <td>522</td>
-                <td>793</td>
-            </tr>
-            <tr class="country stats-row">
-                <td class="stats-title">Country</td>
-                <td>1004</td>
-                <td>945</td>
-                <td>294</td>
-                <td>522</td>
-                <td>793</td>
-            </tr>
+<!--            <tr class="global stats-row">-->
+<!--                <td class="stats-title">Global</td>-->
+<!--                <td>1004</td>-->
+<!--                <td>945</td>-->
+<!--                <td>294</td>-->
+<!--                <td>522</td>-->
+<!--            </tr>-->
+                <tr th:each="map : ${cases}" class="country stats-row">
+                    <td class="stats-title"><a th:href="@{/country/{country}(country=${map.key})}" th:text="${map.key}"></a></td>
+                    <div th:each="case : ${map.value}">
+                        <td th:text="${case}"></td>
+                    </div>
+
+<!--                    <td th:text="${confirmedCases.get(map.key)}"></td>-->
+<!--                    <td th:text="${map.value}"></td>-->
+<!--                    <td th:text="${confirmedDeaths.get(map.key)}"></td>-->
+<!--                    <td th:text="${newDeaths.get(map.key)}"></td>-->
+                </tr>
         </table>
     </section>
 </article>
 </body>
 <script type="text/javascript" th:src="@{/js/countries.js}"></script>
+<script type="text/javascript">
+    function getCountriesByDate(date) {
+        $.ajax({
+            type: "GET",
+            url: "/countries/" + date,
+            dataType: "json",
+            complete: [
+                function (response) {
+                    $("#table-countries").remove();
+                    htmlTable = `<table id="table-countries" cellpadding="0" cellspacing="0" class="heat-map table">`;
+                    htmlTable += `<tr>
+                                    <th class="blue">Country</th>
+                                    <th class="orange">Cases, total</th>
+                                    <th class="orange">New cases</th>
+                                    <th class="red">Deaths, total</th>
+                                    <th class="red">New deaths</th>
+                                </tr>`
+                    var data = ``;
+                    var obj = $.parseJSON(response.responseText);
+                    number = obj.length;
+                    var c = 0;
+                    for (const [key, value] of Object.entries(obj)) {
+                        c += 1;
+                        data += `<tr class="country stats-row">
+                    <td class="stats-title"><a href="/country/`+key+`">`+key+`</a></td>
+                    <td>`+value[0]+`</td>
+                    <td>`+value[1]+`</td>
+                    <td>`+value[2]+`</td>
+                    <td>`+value[3]+`</td>
+                </tr>`
+                    }
+                    htmlTable += data + `<table>`;
+                    $("#table").append(htmlTable);
+                    sorting();
+                }
+            ]
+        });
+    }
+    sorting();
+</script>
 </html>

@@ -1,8 +1,8 @@
 package com.sapiofan.predictions.services.impl;
 
 import com.opencsv.CSVReader;
+import com.sapiofan.predictions.entities.AllCountries;
 import com.sapiofan.predictions.entities.CountryData;
-import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.entities.WorldData;
 import com.sapiofan.predictions.services.FileReaderService;
 import org.slf4j.Logger;
@@ -45,6 +45,7 @@ public class FileReaderServiceImpl implements FileReaderService {
             return -1;
         });
         String lastDay = names.get(0);
+        LocalDate today = LocalDate.now();
 
         for (File listOfFile : listOfFiles) {
             if (listOfFile.getName().contains("Read") || listOfFile.getName().equals(lastDay)) {
@@ -54,8 +55,10 @@ public class FileReaderServiceImpl implements FileReaderService {
                 String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
                         .format(endFormatter);
                 Map<String, Integer> dataCases = new HashMap<>();
+                Map<String, List<Integer>> dataCasesBounds = new HashMap<>();
                 Map<String, Long> confirmedCases = new HashMap<>();
                 Map<String, Integer> dataDeaths = new HashMap<>();
+                Map<String, List<Integer>> dataDeathsBounds = new HashMap<>();
                 Map<String, Integer> confirmedDeaths = new HashMap<>();
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
@@ -70,12 +73,28 @@ public class FileReaderServiceImpl implements FileReaderService {
                         dataDeaths.put(area, Integer.parseInt(values[2]));
                         confirmedCases.put(area, Long.parseLong(values[3]));
                         confirmedDeaths.put(area, Integer.parseInt(values[4]));
+//                        List<Integer> listCases = new ArrayList<>();
+//                        List<Integer> listDeaths = new ArrayList<>();
+//                        try {
+//                            listCases.add(Integer.parseInt(values[1]));
+//                            listCases.add(Integer.parseInt(values[5]));
+//                            listCases.add(Integer.parseInt(values[6]));
+//                            dataCasesBounds.put(area, listCases);
+//                        } catch (ArrayIndexOutOfBoundsException e) {}
+//                        listDeaths.add(Integer.parseInt(values[7]));
+//                        listDeaths.add(Integer.parseInt(values[8]));
+//                        dataDeathsBounds.put(area, listDeaths);
                     }
                 }
                 worldData.getWorldCases().put(date, dataCases);
                 worldData.getWorldDeaths().put(date, dataDeaths);
                 worldData.getConfirmedCases().put(date, confirmedCases);
                 worldData.getConfirmedDeaths().put(date, confirmedDeaths);
+//                if(!today.isAfter(LocalDate.parse(listOfFile.getName()
+//                        .substring(0, listOfFile.getName().indexOf('.')), initFormatter))) {
+//                    worldData.getWorldCasesBounds().put(date, dataCasesBounds);
+//                    worldData.getWorldDeathsBounds().put(date, dataDeathsBounds);
+//                }
             } catch (IOException e) {
                 log.error("Something went wrong while reading CSV files for getting world statistics: " + e);
             }
@@ -115,5 +134,52 @@ public class FileReaderServiceImpl implements FileReaderService {
         }
 
         return countryData;
+    }
+
+    @Override
+    public AllCountries getAllCountries() {
+        AllCountries allCountries = new AllCountries();
+
+        File statisticsFolder = new File("src/main/resources/templates/predictions");
+        File[] listOfFiles = statisticsFolder.listFiles();
+        boolean header = true;
+
+        for (File listOfFile : listOfFiles) {
+            if (listOfFile.getName().contains("Read")) {
+                continue;
+            }
+            try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
+                String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
+                        .format(endFormatter);
+                Map<String, Integer> dataCases = new HashMap<>();
+                Map<String, Long> confirmedCases = new HashMap<>();
+                Map<String, Integer> dataDeaths = new HashMap<>();
+                Map<String, Integer> confirmedDeaths = new HashMap<>();
+                String[] values;
+                while ((values = csvReader.readNext()) != null) {
+                    if (header) {
+                        header = false;
+                        continue;
+                    }
+                    String area = values[0];
+                    if (!(area.equals("Europe") || area.equals("Americas") || area.equals("Asia")
+                            || area.equals("Oceania") || area.equals("Africa"))) {
+                        dataCases.put(area, Integer.parseInt(values[1]));
+                        dataDeaths.put(area, Integer.parseInt(values[2]));
+                        confirmedCases.put(area, Long.parseLong(values[3]));
+                        confirmedDeaths.put(area, Integer.parseInt(values[4]));
+                    }
+                }
+                allCountries.getNewCases().put(date, dataCases);
+                allCountries.getNewDeaths().put(date, dataDeaths);
+                allCountries.getConfirmedCases().put(date, confirmedCases);
+                allCountries.getConfirmedDeaths().put(date, confirmedDeaths);
+            } catch (IOException e) {
+                log.error("Something went wrong while reading CSV files for getting %all countries% statistics: " + e);
+            }
+            header = true;
+        }
+
+        return allCountries;
     }
 }

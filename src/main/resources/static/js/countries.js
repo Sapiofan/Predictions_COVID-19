@@ -1,45 +1,3 @@
-$(document).ready(function(){
-    Array.max = function(array){
-        return Math.max.apply(Math,array);
-    };
-
-    var counts= $('.heat-map tbody td').not('.stats-title').map(function() {
-        return parseInt($(this).text());
-    }).get();
-
-    var max = Array.max(counts);
-    console.log(counts);
-    console.log(max);
-    n = 90;
-
-    xr = 255; // Red value
-    xg = 255; // Green value
-    xb = 255; // Blue value
-
-//User Defined Color
-    yr = 250; // Red value
-    yg =0; // Green value
-    yb = 0; // Blue value
-
-
-    $('.heat-map tbody td').not('.stats-title').each(function(){
-        var val = parseInt($(this).text());
-        console.log(val);
-        var pos = parseInt((Math.round((val/max)*80)).toFixed(0));
-        console.log(pos);
-        red = parseInt((xr + (( pos * (yr - xr)) / (n-15))).toFixed(0));
-        console.log(red);
-        green = parseInt((xg + (( pos * (yg - xg)) / (n-15))).toFixed(0));
-        console.log(green);
-        blue = parseInt((xb + (( pos * (yb - xb)) / (n-15))).toFixed(0));
-        console.log(blue);
-        clr = 'rgb('+red+','+green+','+blue+')';
-        console.log(clr);
-        $(this).css({backgroundColor:clr});
-    });
-});
-
-
 var x, i, j, l, ll, selElmnt, a, b, c;
 /*look for any elements with the class "custom-select":*/
 x = document.getElementsByClassName("custom-select");
@@ -81,6 +39,7 @@ for (i = 0; i < l; i++) {
                 }
             }
             h.click();
+            getCountriesByDate(this.innerText);
         });
         b.appendChild(c);
     }
@@ -120,3 +79,39 @@ function closeAllSelect(elmnt) {
 /*if the user clicks anywhere outside the select box,
 then close all select boxes:*/
 document.addEventListener("click", closeAllSelect);
+
+
+function sorting() {
+    const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+    const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+    document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+        const table = th.closest('table');
+        Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+            .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+            .forEach(tr => table.appendChild(tr) );
+    })));
+}
+
+
+function searching() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("searchId");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("table-countries");
+    tr = table.getElementsByTagName("tr");
+    for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
