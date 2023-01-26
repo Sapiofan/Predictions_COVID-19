@@ -35,11 +35,23 @@ public class MainController {
         WorldData worldData = fileReaderService.getWorldData();
         model.addAttribute("initial", worldData.existedWorldCases());
         model.addAttribute("prediction", worldData.predictedWorldCases());
+        model.addAttribute("days", 120);
+        model.addAttribute("confirmedCases", 100000);
+        model.addAttribute("confirmedDeaths", 28);
+        model.addAttribute("predictionDays", 28);
+        model.addAttribute("newCases", 28);
+        model.addAttribute("newDeaths", 28);
         return "home";
     }
 
     @GetMapping("/country/{name}")
-    public String getCountryStatistics() {
+    public String getCountryStatistics(Model model) {
+        model.addAttribute("days", 120);
+        model.addAttribute("confirmedCases", 100000);
+        model.addAttribute("confirmedDeaths", 28);
+        model.addAttribute("predictionDays", 28);
+        model.addAttribute("newCases", 28);
+        model.addAttribute("newDeaths", 28);
         return "country";
     }
 

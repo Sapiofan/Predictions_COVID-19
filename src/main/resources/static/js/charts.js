@@ -128,7 +128,6 @@ anychart.onDocumentReady(function () {
     series = chart.column(thirdSeriesData);
     setupSeriesLabels(series, 'Arizona');
 
-
     // turn on legend
     chart.legend().enabled(true).fontSize(13).padding([0, 0, 20, 0]);
     // set yAxis labels formatter
@@ -143,9 +142,17 @@ anychart.onDocumentReady(function () {
 
     chart.tooltip().valuePrefix('$').displayMode('union');
 
+    chart.barsPadding(0);
+    chart.barGroupsPadding(0);
+
     // set container id for the chart
     chart.container('column-chart');
 
     // initiate chart drawing
     chart.draw();
+
+    var trial = document.getElementsByClassName("anychart-credits")
+    for (let i = 0; i < trial.length; i++) {
+        trial[i].remove();
+    }
 });
