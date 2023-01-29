@@ -15,6 +15,14 @@
     <link th:href="@{/css/general.css}" rel="stylesheet" />
     <link th:href="@{/css/country.css}" rel="stylesheet" />
 
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
+    <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <title th:text="${country}"></title>
 </head>
 <body>
@@ -36,19 +44,8 @@
             <div class="row">
                 <div class="toggle-button-cover">
                     <div class="button-cover">
-                        <div class="button b2" id="button-10">
-                            <input type="checkbox" class="checkbox">
-                            <div class="knobs">
-                                <span>Existed</span>
-                            </div>
-                            <div class="layer"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="toggle-button-cover">
-                    <div class="button-cover">
                         <div class="button b2" id="button-11">
-                            <input type="checkbox" class="checkbox">
+                            <input name="type" id="type" type="checkbox" class="checkbox">
                             <div class="knobs">
                                 <span>New</span>
                             </div>
@@ -59,7 +56,7 @@
                 <div class="toggle-button-cover">
                     <div class="button-cover">
                         <div class="button b2" id="button-12">
-                            <input type="checkbox" class="checkbox">
+                            <input name="quantity" id="quantity" type="checkbox" class="checkbox">
                             <div class="knobs">
                                 <span>Daily</span>
                             </div>
@@ -69,15 +66,17 @@
                 </div>
             </div>
         </div>
-        <div class="flex-wrapper charts">
-            <div class="cases-data">
+        <div class="charts">
+            <div class="cases-data flex-wrapper">
                 <div class="info dark-blue">
                     <h1 class="cases"><span th:text="${confirmedCases}"></span></h1>
                     <h4>Confirmed cases</h4>
                     <h1 class="cases"><span th:text="${predictedCases}"></span></h1>
                     <h4>Predicted cases</h4>
                 </div>
-                <div id="container-chart"></div>
+                <div class="container-area" id="line-chart-container">
+                    <div id="line-chart"></div>
+                </div>
             </div>
         </div>
         <div class="flex-wrapper">
@@ -89,10 +88,100 @@
                     <h4>Predicted deaths</h4>
                 </div>
             </div>
-            <div id="container-chart2"></div>
+            <div class="container-area" id="column-chart-container">
+                <div id="column-chart"></div>
+            </div>
         </div>
         </div>
     </section>
 </article>
 </body>
+<script type="text/javascript" th:src="@{/js/country.js}"></script>
+<script th:inline="javascript" type="text/javascript">
+
+    /*<![CDATA[*/
+
+    var country = /*[[${country}]]*/ 'default';
+
+    var cases = /*[[${cases}]]*/ 'default';
+
+    var deaths = /*[[${deaths}]]*/ 'default';
+
+    /*]]>*/
+
+    function getCases() {
+        var array = [];
+        var counter = 0;
+        console.log(cases);
+        for (const [key, value] of Object.entries(cases)) {
+            var date = [];
+            date[0] = key;
+            date[1] = value[0];
+            date[2] = value[1];
+            date[3] = value[2];
+            array[counter] = date;
+            counter += 1;
+        }
+
+        // for (const [key, value] of Object.entries(prediction)) {
+        //     var date = [];
+        //     date[0] = key;
+        //     // console.log(`${key}`);
+        //     for (const [key1, value1] of Object.entries(value)) {
+        //         if(key1 == "World") {
+        //             date[1] = value1[0];
+        //             date[2] = value1[1];
+        //             date[3] = value1[2];
+        //             break;
+        //         }
+        //         // console.log(`${key1}: ${value1}`);
+        //     }
+        //     array[counter] = date;
+        //     counter += 1;
+        // }
+
+        return array;
+    }
+
+    function getDeaths() {
+        var array = [];
+        var counter = 0;
+        for (const [key, value] of Object.entries(deaths)) {
+            var date = [];
+            date[0] = key;
+            date[1] = value[0];
+            date[2] = value[1];
+            date[3] = value[2];
+            array[counter] = date;
+            counter += 1;
+        }
+
+        return array;
+    }
+
+    chartLine();
+    chartColumn();
+
+    function changeChartMode(t, q) {
+        $.ajax({
+            type: "GET",
+            url: "/" + country + "/chartMode",
+            dataType: "json",
+            data: jQuery.param({ type: t, quantity : q}),
+            complete: [
+                function (response) {
+                    $("#line-chart").remove();
+                    $("#column-chart").remove();
+                    var obj = $.parseJSON(response.responseText);
+                    cases = obj[0];
+                    deaths = obj[1];
+                    $("#line-chart-container").append(`<div id="line-chart"></div>`);
+                    $("#column-chart-container").append(`<div id="column-chart"></div>`);
+                    chartLine();
+                    chartColumn();
+                }
+            ]
+        });
+    }
+</script>
 </html>

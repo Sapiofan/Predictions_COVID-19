@@ -34,45 +34,45 @@ public class StatisticsImpl implements Statistics {
     @Autowired
     private Utils utils;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void doSomethingAfterStartup() {
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Data data = getWorldData();
-                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-
-                log.warn("Started calculating exponential smooth");
-                for (String country : utils.getCountries()) {
-                    executor.execute(() -> getCountryDataExponential(data, country));
-                }
-
-                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
-                for (String area : areas) {
-                    executor.execute(() -> getCountryDataExponential(data, area));
-                }
-                executor.execute(() -> getCountryDataExponential(data, "World"));
-
-                while (true) {
-                    if (executor.getActiveCount() == 0) {
-                        handlePredictedCases(data);
-                        log.warn("Ended calculating exponential smooth");
-                        log.warn("Start writing to csv");
-                        fileHandlerService.writeToCSV(data);
-                        log.warn("End writing to csv");
-                        break;
-                    } else {
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException e) {
-                            log.error("Can't sleep timer: " + e);
-                        }
-                    }
-                }
-//                getCountryDataLinear(data);
-            }
-        }, 0, 86400000);
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void doSomethingAfterStartup() {
+//        new Timer().scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//                Data data = getWorldData();
+//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+//
+//                log.warn("Started calculating exponential smooth");
+//                for (String country : utils.getCountries()) {
+//                    executor.execute(() -> getCountryDataExponential(data, country));
+//                }
+//
+//                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+//                for (String area : areas) {
+//                    executor.execute(() -> getCountryDataExponential(data, area));
+//                }
+//                executor.execute(() -> getCountryDataExponential(data, "World"));
+//
+//                while (true) {
+//                    if (executor.getActiveCount() == 0) {
+//                        handlePredictedCases(data);
+//                        log.warn("Ended calculating exponential smooth");
+//                        log.warn("Start writing to csv");
+//                        fileHandlerService.writeToCSV(data);
+//                        log.warn("End writing to csv");
+//                        break;
+//                    } else {
+//                        try {
+//                            Thread.sleep(3000);
+//                        } catch (InterruptedException e) {
+//                            log.error("Can't sleep timer: " + e);
+//                        }
+//                    }
+//                }
+////                getCountryDataLinear(data);
+//            }
+//        }, 0, 86400000);
+//    }
 
     @Override
     public Data getWorldData() {

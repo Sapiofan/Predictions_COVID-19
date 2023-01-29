@@ -1,17 +1,23 @@
 package com.sapiofan.predictions.entities;
 
+import com.sapiofan.predictions.controllers.MainController;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Data
 public class CountryData {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+    private static final Logger log = LoggerFactory.getLogger(CountryData.class);
 
     private String country;
 
@@ -25,8 +31,11 @@ public class CountryData {
     }
 
     public TreeMap<String, List<Integer>> existedCountryCases() {
-        return new TreeMap<>(countryCases.subMap(countryCases.firstKey(),
+        TreeMap<String, List<Integer>> map = new TreeMap<>(countryCases.subMap(countryCases.firstKey(),
                 true, LocalDate.now().format(formatter), false));
+        map.lastEntry().getValue().add(map.lastEntry().getValue().get(0));
+        map.lastEntry().getValue().add(map.lastEntry().getValue().get(0));
+        return map;
     }
 
     public TreeMap<String, List<Integer>> predictedCountryCases() {
@@ -35,55 +44,75 @@ public class CountryData {
     }
 
     public TreeMap<String, List<Integer>> existedCountryDeaths() {
-        return new TreeMap<>(countryCases.subMap(countryCases.firstKey(),
+        TreeMap<String, List<Integer>> map = new TreeMap<>(countryDeaths.subMap(countryDeaths.firstKey(),
                 true, LocalDate.now().format(formatter), false));
+        map.lastEntry().getValue().add(map.lastEntry().getValue().get(0));
+        map.lastEntry().getValue().add(map.lastEntry().getValue().get(0));
+        return map;
     }
 
     public TreeMap<String, List<Integer>> predictedCountryDeaths() {
-        return new TreeMap<>(countryCases.subMap(LocalDate.now().format(formatter),
-                true, countryCases.lastKey(), false));
+        return new TreeMap<>(countryDeaths.subMap(LocalDate.now().format(formatter),
+                true, countryDeaths.lastKey(), false));
     }
 
-    public Map<String, List<Integer>> existedCountryCasesWeekly() {
+    public TreeMap<String, List<Integer>> existedCountryCasesWeekly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> existedCountryCases = existedCountryCases();
 
         return calculateCasesWeekly(map, existedCountryCases);
     }
 
-    public Map<String, List<Integer>> predictedCountryCasesWeekly() {
+    public TreeMap<String, List<Integer>> predictedCountryCasesWeekly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> predictedCountryCases = predictedCountryCases();
 
         return calculateCasesWeekly(map, predictedCountryCases);
     }
 
-    public Map<String, List<Integer>> existedWorldDeathsWeekly() {
+    public TreeMap<String, List<Integer>> countryCasesWeekly() {
+        TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
+        return calculateCasesWeekly(map, countryCases);
+    }
+
+    public TreeMap<String, List<Integer>> existedCountryDeathsWeekly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> existedCountryDeaths = existedCountryCases();
 
         return calculateCasesWeekly(map, existedCountryDeaths);
     }
 
-    public Map<String, List<Integer>> predictedWorldDeathsWeekly() {
+    public TreeMap<String, List<Integer>> predictedCountryDeathsWeekly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> predictedWorldDeaths = predictedCountryDeaths();
 
         return calculateCasesWeekly(map, predictedWorldDeaths);
     }
 
-    private Map<String, List<Integer>> calculateCasesWeekly(TreeMap<String, List<Integer>> map,
+    public TreeMap<String, List<Integer>> countryDeathsWeekly() {
+        TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
+        return calculateCasesWeekly(map, countryDeaths);
+    }
+
+    private TreeMap<String, List<Integer>> calculateCasesWeekly(TreeMap<String, List<Integer>> map,
                                                       TreeMap<String, List<Integer>> cases) {
         int counter = 0;
-        List<Integer> list = Stream.iterate(0, n -> n).limit(3).collect(Collectors.toList());
+        List<Integer> list = IntStream.iterate(0, i -> i).limit(3).boxed().collect(Collectors.toList());
+        log.warn(cases+"");
+
         for (Map.Entry<String, List<Integer>> stringMapEntry : cases.entrySet()) {
             list.set(0, list.get(0) + stringMapEntry.getValue().get(0));
-            list.set(1, list.get(1) + stringMapEntry.getValue().get(1));
-            list.set(2, list.get(2) + stringMapEntry.getValue().get(2));
+            if(stringMapEntry.getValue().size() > 1) {
+                list.set(1, list.get(1) + stringMapEntry.getValue().get(1));
+                list.set(2, list.get(2) + stringMapEntry.getValue().get(2));
+            } else {
+                list.set(1, list.get(1) + stringMapEntry.getValue().get(0));
+                list.set(2, list.get(2) + stringMapEntry.getValue().get(0));
+            }
             if (++counter == 7) {
                 counter = 0;
                 map.put(stringMapEntry.getKey(), list);
-                list = Stream.iterate(0, n -> n).limit(3).collect(Collectors.toList());
+                list = IntStream.iterate(0, i -> i).limit(3).boxed().collect(Collectors.toList());
             }
         }
 
@@ -128,10 +157,16 @@ public class CountryData {
         return map;
     }
 
+    public TreeMap<String, List<Integer>> countryConfirmedDeaths() {
+        TreeMap<String, List<Integer>> map = existedCountryConfirmedDeaths();
+        map.putAll(predictedCountryConfirmedDeaths());
+        return map;
+    }
+
     public TreeMap<String, List<Integer>> existedConfirmedCasesWeakly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> existedCountryConfirmedCases = existedCountryConfirmedCases();
-        calculateConfirmedCasesWeekly(map, existedCountryConfirmedCases);
+        calculateConfirmedCasesWeekly(existedCountryConfirmedCases, map);
 
         return map;
     }
@@ -140,7 +175,14 @@ public class CountryData {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
         TreeMap<String, List<Integer>> predictedCountryConfirmedCases = predictedCountryConfirmedCases();
 
-        calculateConfirmedCasesWeekly(map, predictedCountryConfirmedCases);
+        calculateConfirmedCasesWeekly(predictedCountryConfirmedCases, map);
+
+        return map;
+    }
+
+    public TreeMap<String, List<Integer>> confirmedCasesWeakly() {
+        TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
+        calculateConfirmedCasesWeekly(countryConfirmedCases, map);
 
         return map;
     }
@@ -172,6 +214,13 @@ public class CountryData {
         TreeMap<String, List<Integer>> predictedCountryConfirmedDeaths = predictedCountryConfirmedDeaths();
 
         calculateConfirmedDeathsWeekly(predictedCountryConfirmedDeaths, map);
+
+        return map;
+    }
+
+    public TreeMap<String, List<Integer>> confirmedDeathsWeakly() {
+        TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
+        calculateConfirmedDeathsWeekly(countryConfirmedDeaths, map);
 
         return map;
     }

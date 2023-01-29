@@ -57,7 +57,7 @@
 <!--                <td>522</td>-->
 <!--            </tr>-->
                 <tr th:each="map : ${cases}" class="country stats-row">
-                    <td class="stats-title"><a th:href="@{/country/{country}(country=${map.key})}" th:text="${map.key}"></a></td>
+                    <td class="stats-title"><a th:href="@{/{country}(country=${map.key})}" th:text="${map.key}"></a></td>
                     <div th:each="case : ${map.value}">
                         <td th:text="${case}"></td>
                     </div>
@@ -96,7 +96,7 @@
                     for (const [key, value] of Object.entries(obj)) {
                         c += 1;
                         data += `<tr class="country stats-row">
-                    <td class="stats-title"><a href="/country/`+key+`">`+key+`</a></td>
+                    <td class="stats-title"><a href="/`+key+`">`+key+`</a></td>
                     <td>`+value[0]+`</td>
                     <td>`+value[1]+`</td>
                     <td>`+value[2]+`</td>

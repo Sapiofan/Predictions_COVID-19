@@ -128,7 +128,7 @@ public class FileReaderServiceImpl implements FileReaderService {
                         deaths.add(Integer.parseInt(values[2]));
                         cCases.add(Integer.parseInt(values[3]));
                         cDeaths.add(Integer.parseInt(values[4]));
-                        if(values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
+                        if(values.length > 5) {
                             cases.add(Integer.parseInt(values[5]));
                             cases.add(Integer.parseInt(values[6]));
                             deaths.add(Integer.parseInt(values[7]));

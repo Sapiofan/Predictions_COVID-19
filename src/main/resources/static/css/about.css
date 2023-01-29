@@ -75,3 +75,21 @@ h1 {
     font-size: 22px;
     margin: 0 0 0 20px;
 }
+
+.content p {
+    margin: 10px 0;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.content ol li {
+    margin: 10px 0;
+}
+
+.github-source {
+    text-decoration: none;
+    color: #EF476F;
+}
+

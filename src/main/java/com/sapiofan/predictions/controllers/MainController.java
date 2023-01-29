@@ -1,6 +1,7 @@
 package com.sapiofan.predictions.controllers;
 
 import com.sapiofan.predictions.entities.AllCountries;
+import com.sapiofan.predictions.entities.CountryData;
 import com.sapiofan.predictions.entities.WorldData;
 import com.sapiofan.predictions.services.FileReaderService;
 import com.sapiofan.predictions.services.impl.Utils;
@@ -11,10 +12,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -44,8 +47,12 @@ public class MainController {
         return "home";
     }
 
-    @GetMapping("/country/{name}")
-    public String getCountryStatistics(Model model) {
+    @GetMapping("/{name}")
+    public String getCountryStatistics(Model model, @PathVariable("name") String name) {
+        CountryData countryData = fileReaderService.getCountryData(name);
+        model.addAttribute("country", name);
+        model.addAttribute("cases", countryData.getCountryCases());
+        model.addAttribute("deaths", countryData.getCountryDeaths());
         model.addAttribute("days", 120);
         model.addAttribute("confirmedCases", 100000);
         model.addAttribute("confirmedDeaths", 28);
@@ -76,6 +83,36 @@ public class MainController {
         TreeMap<String, List<Long>> map = allCountries.getTableView(date);
         map.keySet().retainAll(utils.getCountries());
         return map;
+    }
+
+    @GetMapping("/{country}/chartMode")
+    @ResponseBody
+    public List<TreeMap<String, List<Integer>>> changeChartMode(@RequestParam("type") Boolean type,
+                                                                @RequestParam("quantity") Boolean quantity,
+                                                                @PathVariable("country") String country) {
+        log.warn("here");
+        log.warn(type + " : " + quantity + " : " + country);
+        CountryData countryData = fileReaderService.getCountryData(country);
+        List<TreeMap<String, List<Integer>>> list = new ArrayList<>();
+        if (type) {
+            if (quantity) {
+                list.add(countryData.confirmedCasesWeakly());
+                list.add(countryData.confirmedDeathsWeakly());
+            } else {
+                list.add(countryData.getCountryConfirmedCases());
+                list.add(countryData.getCountryConfirmedDeaths());
+            }
+        } else {
+            if (quantity) {
+                list.add(countryData.countryCasesWeekly());
+                list.add(countryData.countryDeathsWeekly());
+            } else {
+                list.add(countryData.getCountryCases());
+                list.add(countryData.getCountryDeaths());
+            }
+        }
+
+        return list;
     }
 
     @GetMapping("/about")
