@@ -90,8 +90,6 @@ public class MainController {
     public List<TreeMap<String, List<Integer>>> changeChartMode(@RequestParam("type") Boolean type,
                                                                 @RequestParam("quantity") Boolean quantity,
                                                                 @PathVariable("country") String country) {
-        log.warn("here");
-        log.warn(type + " : " + quantity + " : " + country);
         CountryData countryData = fileReaderService.getCountryData(country);
         List<TreeMap<String, List<Integer>>> list = new ArrayList<>();
         if (type) {
@@ -99,8 +97,8 @@ public class MainController {
                 list.add(countryData.confirmedCasesWeakly());
                 list.add(countryData.confirmedDeathsWeakly());
             } else {
-                list.add(countryData.getCountryConfirmedCases());
-                list.add(countryData.getCountryConfirmedDeaths());
+                list.add(countryData.countryConfirmedCases());
+                list.add(countryData.countryConfirmedDeaths());
             }
         } else {
             if (quantity) {

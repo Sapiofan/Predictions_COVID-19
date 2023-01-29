@@ -93,9 +93,11 @@ h2 {
 /* Button 10 */
 #button-12 .knobs:before, #button-12 .knobs:after, #button-12 .knobs span,
 #button-11 .knobs:before, #button-11 .knobs:after, #button-11 .knobs span,
+#button-10 .knobs:before, #button-10 .knobs:after, #button-10 .knobs span,
 #button-14 .knobs:before, #button-14 .knobs:after, #button-14 .knobs span,
 #button-15 .knobs:before, #button-15 .knobs:after, #button-15 .knobs span,
-#button-16 .knobs:before, #button-16 .knobs:after, #button-16 .knobs span
+#button-16 .knobs:before, #button-16 .knobs:after, #button-16 .knobs span,
+#button-17 .knobs:before, #button-17 .knobs:after, #button-17 .knobs span
 {
     position: absolute;
     top: 4px;
@@ -112,9 +114,11 @@ h2 {
 
 #button-12 .knobs:before,
 #button-11 .knobs:before,
+#button-10 .knobs:before,
 #button-14 .knobs:before,
 #button-15 .knobs:before,
-#button-16 .knobs:before
+#button-16 .knobs:before,
+#button-17 .knobs:before
 {
     content: '';
     left: 4px;
@@ -156,11 +160,27 @@ h2 {
     color: #4e4e4e;
 }
 
+#button-17 .knobs:after
+{
+    content: 'Col';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-10 .knobs:after
+{
+    content: 'Col';
+    right: 4px;
+    color: #4e4e4e;
+}
+
 #button-12 .knobs span,
 #button-11 .knobs span,
+#button-10 .knobs span,
 #button-14 .knobs span,
 #button-15 .knobs span,
-#button-16 .knobs span
+#button-16 .knobs span,
+#button-17 .knobs span
 {
     display: inline-block;
     left: 4px;
@@ -170,18 +190,22 @@ h2 {
 
 #button-12 .checkbox:checked + .knobs span,
 #button-11 .checkbox:checked + .knobs span,
+#button-10 .checkbox:checked + .knobs span,
 #button-14 .checkbox:checked + .knobs span,
 #button-15 .checkbox:checked + .knobs span,
-#button-16 .checkbox:checked + .knobs span
+#button-16 .checkbox:checked + .knobs span,
+#button-17 .checkbox:checked + .knobs span
 {
     color: #4e4e4e;
 }
 
 #button-12 .checkbox:checked + .knobs:before,
 #button-11 .checkbox:checked + .knobs:before,
+#button-10 .checkbox:checked + .knobs:before,
 #button-14 .checkbox:checked + .knobs:before,
 #button-15 .checkbox:checked + .knobs:before,
-#button-16 .checkbox:checked + .knobs:before
+#button-16 .checkbox:checked + .knobs:before,
+#button-17 .checkbox:checked + .knobs:before
 {
     left: 79px;
     background-color: #F44336;
@@ -189,18 +213,22 @@ h2 {
 
 #button-12 .checkbox:checked + .knobs:after,
 #button-11 .checkbox:checked + .knobs:after,
+#button-10 .checkbox:checked + .knobs:after,
 #button-14 .checkbox:checked + .knobs:after,
 #button-15 .checkbox:checked + .knobs:after,
-#button-16 .checkbox:checked + .knobs:after
+#button-16 .checkbox:checked + .knobs:after,
+#button-17 .checkbox:checked + .knobs:after
 {
     color: #fff;
 }
 
 #button-12 .checkbox:checked ~ .layer,
 #button-11 .checkbox:checked ~ .layer,
+#button-10 .checkbox:checked ~ .layer,
 #button-14 .checkbox:checked ~ .layer,
 #button-15 .checkbox:checked ~ .layer,
-#button-16 .checkbox:checked ~ .layer
+#button-16 .checkbox:checked ~ .layer,
+#button-17 .checkbox:checked ~ .layer
 {
     background-color: #fcebeb;
 }

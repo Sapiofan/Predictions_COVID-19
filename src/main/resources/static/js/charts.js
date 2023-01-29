@@ -156,3 +156,57 @@ anychart.onDocumentReady(function () {
         trial[i].remove();
     }
 });
+
+
+
+const type = document.getElementById('type')
+const quantity = document.getElementById('quantity')
+const chartType = document.getElementById('chart-type')
+
+type.addEventListener('change', (event) => {
+    if (event.currentTarget.checked) {
+        if(quantity.checked) {
+            changeWorldChartMode(true, true);
+        } else {
+            changeWorldChartMode(true, false);
+        }
+    } else {
+        if(quantity.checked) {
+            changeWorldChartMode(false, true);
+        } else {
+            changeWorldChartMode(false, false);
+        }
+    }
+})
+
+quantity.addEventListener('change', (event) => {
+    if (event.currentTarget.checked) {
+        if(type.checked) {
+            changeWorldChartMode(true, true);
+        } else {
+            changeWorldChartMode(false, true);
+        }
+    } else {
+        if(type.checked) {
+            changeWorldChartMode(true, false);
+        } else {
+            changeWorldChartMode(false, false);
+        }
+    }
+})
+
+chartType.addEventListener('change', (event) => {
+    document.getElementById("line-chart").remove();
+    document.getElementById("column-chart").remove();
+    document.getElementById("line-chart-container").innerHTML += "<div id='line-chart'></div>";
+    document.getElementById("column-chart-container").innerHTML += "<div id='column-chart'></div>";
+    if (event.currentTarget.checked) {
+        chartColumn("line-chart", getCases());
+        chartColumn("column-chart", getDeaths());
+        typeOfChartLinear = false;
+    } else {
+        chartLine("line-chart", getCases());
+        chartLine("column-chart", getDeaths());
+        typeOfChartLinear = true;
+    }
+})

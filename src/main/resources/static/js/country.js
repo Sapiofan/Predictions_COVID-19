@@ -1,7 +1,7 @@
-function chartLine() {
+function chartLine(container, data) {
     // anychart.onDocumentReady(function () {
     // create data set on our data
-    var dataSet = anychart.data.set(getCases());
+    var dataSet = anychart.data.set(data);
 
     // map data for the first series, take x from the zero column and value from the first column of data set
     var firstSeriesData = dataSet.mapAs({x: 0, value: 1});
@@ -69,7 +69,7 @@ function chartLine() {
     chart.legend().enabled(true).fontSize(13).padding([0, 0, 10, 0]);
 
     // set container id for the chart
-    chart.container('line-chart');
+    chart.container(container);
     // initiate chart drawing
     chart.draw();
 
@@ -79,9 +79,9 @@ function chartLine() {
     }
 }
 
-function chartColumn() {
+function chartColumn(container, data) {
         // create data set on our data
-        var dataSet = anychart.data.set(getDeaths());
+        var dataSet = anychart.data.set(data);
 
         // map data for the first series, take x from the zero column and value from the first column of data set
         var firstSeriesData = dataSet.mapAs({x: 0, value: 1});
@@ -144,7 +144,7 @@ function chartColumn() {
         chart.barGroupsPadding(0);
 
         // set container id for the chart
-        chart.container('column-chart');
+        chart.container(container);
 
         // initiate chart drawing
         chart.draw();
@@ -153,13 +153,13 @@ function chartColumn() {
         for (let i = 0; i < trial.length; i++) {
             trial[i].remove();
         }
-    // });
 }
 
 
 
 const type = document.getElementById('type')
 const quantity = document.getElementById('quantity')
+const chartType = document.getElementById('chart-type')
 
 type.addEventListener('change', (event) => {
     if (event.currentTarget.checked) {
@@ -190,5 +190,21 @@ quantity.addEventListener('change', (event) => {
         } else {
             changeChartMode(false, false);
         }
+    }
+})
+
+chartType.addEventListener('change', (event) => {
+    document.getElementById("line-chart").remove();
+    document.getElementById("column-chart").remove();
+    document.getElementById("line-chart-container").innerHTML += "<div id='line-chart'></div>";
+    document.getElementById("column-chart-container").innerHTML += "<div id='column-chart'></div>";
+    if (event.currentTarget.checked) {
+        chartColumn("line-chart", getCases());
+        chartColumn("column-chart", getDeaths());
+        typeOfChartLinear = false;
+    } else {
+        chartLine("line-chart", getCases());
+        chartLine("column-chart", getDeaths());
+        typeOfChartLinear = true;
     }
 })

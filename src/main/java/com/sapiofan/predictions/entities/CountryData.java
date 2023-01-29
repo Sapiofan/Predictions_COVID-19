@@ -140,6 +140,13 @@ public class CountryData {
         return map;
     }
 
+    public TreeMap<String, List<Integer>> countryConfirmedCases() {
+        TreeMap<String, List<Integer>> map = existedCountryConfirmedCases();
+        map.putAll(predictedCountryConfirmedCases());
+
+        return map;
+    }
+
     public TreeMap<String, List<Integer>> existedCountryConfirmedDeaths() {
         return new TreeMap<>(countryConfirmedDeaths.subMap(countryConfirmedDeaths.firstKey(),
                 true, LocalDate.now().format(formatter), false));
@@ -182,7 +189,7 @@ public class CountryData {
 
     public TreeMap<String, List<Integer>> confirmedCasesWeakly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
-        calculateConfirmedCasesWeekly(countryConfirmedCases, map);
+        calculateConfirmedCasesWeekly(countryConfirmedCases(), map);
 
         return map;
     }
@@ -220,7 +227,7 @@ public class CountryData {
 
     public TreeMap<String, List<Integer>> confirmedDeathsWeakly() {
         TreeMap<String, List<Integer>> map = new TreeMap<>(dateComparator());
-        calculateConfirmedDeathsWeekly(countryConfirmedDeaths, map);
+        calculateConfirmedDeathsWeekly(countryConfirmedDeaths(), map);
 
         return map;
     }

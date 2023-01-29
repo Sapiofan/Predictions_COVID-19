@@ -9,6 +9,8 @@
     <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
@@ -42,7 +44,7 @@
                 <div class="toggle-button-cover">
                     <div class="button-cover">
                         <div class="button b2" id="button-11">
-                            <input type="checkbox" class="checkbox">
+                            <input name="type" id="type" type="checkbox" class="checkbox">
                             <div class="knobs">
                                 <span>New</span>
                             </div>
@@ -53,9 +55,20 @@
                 <div class="toggle-button-cover">
                     <div class="button-cover">
                         <div class="button b2" id="button-12">
-                            <input type="checkbox" class="checkbox">
+                            <input name="quantity" id="quantity" type="checkbox" class="checkbox">
                             <div class="knobs">
                                 <span>Daily</span>
+                            </div>
+                            <div class="layer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle-button-cover">
+                    <div class="button-cover">
+                        <div class="button b2" id="button-10">
+                            <input name="chart-type" id="chart-type" type="checkbox" class="checkbox">
+                            <div class="knobs">
+                                <span>Lin</span>
                             </div>
                             <div class="layer"></div>
                         </div>
@@ -71,7 +84,7 @@
                     <h1 class="cases"><span th:text="${predictedCases}"></span></h1>
                     <h4>Predicted cases</h4>
                 </div>
-                <div class="container-area">
+                <div class="container-area" id="line-chart-container">
                     <div id="line-chart"></div>
                 </div>
             </div>
@@ -85,7 +98,7 @@
                     <h4>Predicted deaths</h4>
                 </div>
             </div>
-            <div class="container-area">
+            <div class="container-area" id="column-chart-container">
                 <div id="column-chart"></div>
             </div>
         </div>
@@ -98,7 +111,7 @@
             <div class="toggle-button-cover">
                 <div class="button-cover">
                     <div class="button b2" id="button-14">
-                        <input type="checkbox" class="checkbox">
+                        <input name="quantity" id="type-r" type="checkbox" class="checkbox">
                         <div class="knobs">
                             <span>New</span>
                         </div>
@@ -109,7 +122,7 @@
             <div class="toggle-button-cover">
                 <div class="button-cover">
                     <div class="button b2" id="button-15">
-                        <input type="checkbox" class="checkbox">
+                        <input name="quantity" id="quantity-r" type="checkbox" class="checkbox">
                         <div class="knobs">
                             <span>Daily</span>
                         </div>
@@ -120,9 +133,20 @@
             <div class="toggle-button-cover">
                 <div class="button-cover">
                     <div class="button b2" id="button-16">
-                        <input type="checkbox" class="checkbox">
+                        <input name="quantity" id="data-r" type="checkbox" class="checkbox">
                         <div class="knobs">
                             <span>Cases</span>
+                        </div>
+                        <div class="layer"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="toggle-button-cover">
+                <div class="button-cover">
+                    <div class="button b2" id="button-17">
+                        <input name="chart-type" id="chart-type-r" type="checkbox" class="checkbox">
+                        <div class="knobs">
+                            <span>Lin</span>
                         </div>
                         <div class="layer"></div>
                     </div>
@@ -168,47 +192,21 @@
 
     /*<![CDATA[*/
 
-    var prediction = /*[[${prediction}]]*/ 'default';
-    // console.log(prediction);
+    var cases = /*[[${cases}]]*/ 'default';
 
-    var initial = /*[[${initial}]]*/ 'default';
-    // console.log(initial);
+    var deaths = /*[[${deaths}]]*/ 'default';
 
     /*]]>*/
 
-    function getData() {
+    function getCases() {
         var array = [];
         var counter = 0;
-        for (const [key, value] of Object.entries(initial)) {
+        for (const [key, value] of Object.entries(cases)) {
             var date = [];
             date[0] = key;
-            // console.log(`${key}`);
-            for (const [key1, value1] of Object.entries(value)) {
-                if(key1 == "World") {
-                    date[1] = value1[0];
-                    break;
-                }
-                // console.log(`${key1}: ${value1}`);
-            }
-            array[counter] = date;
-            counter += 1;
-        }
-        array[array.length - 1][1] = array[array.length - 1][0];
-        array[array.length - 1][2] = array[array.length - 1][0];
-
-        for (const [key, value] of Object.entries(prediction)) {
-            var date = [];
-            date[0] = key;
-            // console.log(`${key}`);
-            for (const [key1, value1] of Object.entries(value)) {
-                if(key1 == "World") {
-                    date[1] = value1[0];
-                    date[2] = value1[1];
-                    date[3] = value1[2];
-                    break;
-                }
-                // console.log(`${key1}: ${value1}`);
-            }
+            date[1] = value[0];
+            date[2] = value[1];
+            date[3] = value[2];
             array[counter] = date;
             counter += 1;
         }
@@ -216,34 +214,12 @@
         // for (const [key, value] of Object.entries(prediction)) {
         //     var date = [];
         //     date[0] = key;
-        //     console.log(key);
-        //     for (const [key1, value1] of Object.entries(value)) {
-        //         if(key1 == "World") {
-        //             var counter2 = 1;
-        //             let i = 0;
-        //             while (i < value1.length) {
-        //                 date[counter2] = value1[i];
-        //                 counter2 += 1;
-        //                 i += 1;
-        //             }
-        //             break;
-        //         }
-        //         // console.log(`${key1}: ${value1}`);
-        //     }
-        //     console.log(date);
-        //     array[counter] = date;
-        //     counter += 1;
-        // }
-
-        // console.log(array);
-        // for (const [key, value] of Object.entries(prediction)) {
-        //     // var date = new Array(Object.keys(value).length);
-        //     var date = [];
-        //     date[0] = key.substring(0, key.length - 4);
         //     // console.log(`${key}`);
         //     for (const [key1, value1] of Object.entries(value)) {
         //         if(key1 == "World") {
-        //             date[1] = value1;
+        //             date[1] = value1[0];
+        //             date[2] = value1[1];
+        //             date[3] = value1[2];
         //             break;
         //         }
         //         // console.log(`${key1}: ${value1}`);
@@ -252,75 +228,81 @@
         //     counter += 1;
         // }
 
-        // for (let i = 0; i < array.length; i++) {
-        //     console.log(array[i]);
-        // }
         return array;
-        // return [
-        //     ['1986', 3.6, 2.3, 2.8, 11.5],
-        //     ['1987', 7.1, 4.0, 4.1, 14.1],
-        //     ['1988', 8.5, 6.2, 5.1, 17.5],
-        //     ['1989', 9.2, 11.8, 6.5, 18.9],
-        //     ['1990', 10.1, 13.0, 12.5, 20.8],
-        //     ['1991', 11.6, 13.9, 18.0, 22.9],
-        //     ['1992', 16.4, 18.0, 21.0, 25.2],
-        //     ['1993', 18.0, 23.3, 20.3, 27.0],
-        //     ['1994', 13.2, 24.7, 19.2, 26.5],
-        //     ['1995', 12.0, 18.0, 14.4, 25.3],
-        //     ['1996', 3.2, 15.1, 9.2, 23.4],
-        //     ['1997', 4.1, 11.3, 5.9, 19.5],
-        //     ['1998', 6.3, 14.2, 5.2, 17.8],
-        //     ['1999', 9.4, 13.7, 4.7, 16.2],
-        //     ['2000', 11.5, 9.9, 4.2, 15.4],
-        //     ['2001', 13.5, 12.1, 1.2, 14.0],
-        //     ['2002', 14.8, 13.5, 5.4, 12.5],
-        //     ['2003', 16.6, 15.1, 6.3, 10.8],
-        //     ['2004', 18.1, 17.9, 8.9, 8.9],
-        //     ['2005', 17.0, 18.9, 10.1, 8.0],
-        //     ['2006', 16.6, 20.3, 11.5, 6.2],
-        //     ['2007', 14.1, 20.7, 12.2, 5.1],
-        //     ['2008', 15.7, 21.6, 10, 3.7],
-        //     ['2009', 12.0, 22.5, 8.9, 1.5]
-        // ];
     }
 
-    function getDataColumn() {
+    function getDeaths() {
         var array = [];
         var counter = 0;
-        for (const [key, value] of Object.entries(initial)) {
+        for (const [key, value] of Object.entries(deaths)) {
             var date = [];
             date[0] = key;
-            // console.log(`${key}`);
-            for (const [key1, value1] of Object.entries(value)) {
-                if(key1 == "World") {
-                    date[1] = value1[0];
-                    // date[2] = value1[0];
-                    // date[3] = value1[0];
-                    break;
-                }
-                // console.log(`${key1}: ${value1}`);
-            }
+            date[1] = value[0];
+            date[2] = value[1];
+            date[3] = value[2];
             array[counter] = date;
             counter += 1;
         }
 
-        for (const [key, value] of Object.entries(prediction)) {
-            var date = [];
-            date[0] = key;
-            // console.log(`${key}`);
-            for (const [key1, value1] of Object.entries(value)) {
-                if(key1 == "World") {
-                    date[1] = value1[0];
-                    date[2] = value1[1];
-                    date[3] = value1[2];
-                    break;
-                }
-                // console.log(`${key1}: ${value1}`);
-            }
-            array[counter] = date;
-            counter += 1;
-        }
         return array;
+    }
+
+    chartLine("line-chart", getCases());
+    chartLine("column-chart", getDeaths());
+    let typeOfChartLinear = true;
+
+    function changeWorldChartMode(t, q) {
+        $.ajax({
+            type: "GET",
+            url: "/changeWorld",
+            dataType: "json",
+            data: jQuery.param({ type: t, quantity : q}),
+            complete: [
+                function (response) {
+                    $("#line-chart").remove();
+                    $("#column-chart").remove();
+                    var obj = $.parseJSON(response.responseText);
+                    cases = obj[0];
+                    deaths = obj[1];
+                    $("#line-chart-container").append(`<div id="line-chart"></div>`);
+                    $("#column-chart-container").append(`<div id="column-chart"></div>`);
+                    if(typeOfChartLinear) {
+                        chartLine("line-chart", getCases());
+                        chartLine("column-chart", getDeaths());
+                    } else {
+                        chartColumn("line-chart", getCases());
+                        chartColumn("column-chart", getDeaths());
+                    }
+                }
+            ]
+        });
+    }
+
+    function changeRegionChartMode(d, t, q) {
+        $.ajax({
+            type: "GET",
+            url: "/changeWorld",
+            dataType: "json",
+            data: jQuery.param({ data: d, type: t, quantity : q}),
+            complete: [
+                function (response) {
+                    // $("#line-chart").remove();
+                    // $("#column-chart").remove();
+                    // var obj = $.parseJSON(response.responseText);
+                    // cases = obj[0];
+                    // deaths = obj[1];
+                    // $("#line-chart-container").append(`<div id="line-chart"></div>`);
+                    // $("#column-chart-container").append(`<div id="column-chart"></div>`);
+                    // if(typeOfChartLinear) {
+                    //     chartLine("line-chart", getCases());
+                    //     chartLine("column-chart", getDeaths());
+                    // } else {
+                    //     chartColumn("line-chart", getCases());
+                    //     chartColumn("column-chart", getDeaths());
+                    // }
+                }
+            ]
+        });
     }
 </script>
 <script type="text/javascript" th:src="@{/js/charts.js}"></script>
