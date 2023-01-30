@@ -55,10 +55,8 @@ public class FileReaderServiceImpl implements FileReaderService {
                 String date = LocalDate.parse(listOfFile.getName().substring(0, listOfFile.getName().indexOf(".")), initFormatter)
                         .format(endFormatter);
                 Map<String, List<Integer>> dataCases = new HashMap<>();
-//                Map<String, List<Integer>> dataCasesBounds = new HashMap<>();
-                Map<String, List<Long>> confirmedCases = new HashMap<>();
+                Map<String, List<Integer>> confirmedCases = new HashMap<>();
                 Map<String, List<Integer>> dataDeaths = new HashMap<>();
-//                Map<String, List<Integer>> dataDeathsBounds = new HashMap<>();
                 Map<String, List<Integer>> confirmedDeaths = new HashMap<>();
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
@@ -71,11 +69,11 @@ public class FileReaderServiceImpl implements FileReaderService {
                             || area.equals("Oceania") || area.equals("Africa")) {
                         List<Integer> cases = new ArrayList<>();
                         List<Integer> deaths = new ArrayList<>();
-                        List<Long> cCases = new ArrayList<>();
+                        List<Integer> cCases = new ArrayList<>();
                         List<Integer> cDeaths = new ArrayList<>();
                         cases.add(Integer.parseInt(values[1]));
                         deaths.add(Integer.parseInt(values[2]));
-                        cCases.add(Long.parseLong(values[3]));
+                        cCases.add(Integer.parseInt(values[3]));
                         cDeaths.add(Integer.parseInt(values[4]));
                         if(values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
                             cases.add(Integer.parseInt(values[5]));

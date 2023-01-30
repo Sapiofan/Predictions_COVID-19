@@ -98,7 +98,6 @@ public class CountryData {
                                                       TreeMap<String, List<Integer>> cases) {
         int counter = 0;
         List<Integer> list = IntStream.iterate(0, i -> i).limit(3).boxed().collect(Collectors.toList());
-        log.warn(cases+"");
 
         for (Map.Entry<String, List<Integer>> stringMapEntry : cases.entrySet()) {
             list.set(0, list.get(0) + stringMapEntry.getValue().get(0));

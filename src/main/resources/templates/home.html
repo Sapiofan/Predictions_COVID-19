@@ -157,37 +157,48 @@
             <div class="region">
                 <h3 class="region-name">Europe</h3>
                 <p class="region-cases red">Cases: xxxxxxx</p>
-                <div id="container1"></div>
+                <div class="container-reg" id="europe">
+                    <div id="container1"></div>
+                </div>
             </div>
             <div class="region">
                 <h3 class="region-name">Americas</h3>
                 <p class="region-cases orange">Cases: xxxxxxx</p>
-                <div id="container2"></div>
+                <div class="container-reg" id="america">
+                    <div id="container2"></div>
+                </div>
             </div>
         </div>
         <div class="region-row">
             <div class="region">
                 <h3 class="region-name">Asia</h3>
                 <p class="region-cases green">Cases: xxxxxxx</p>
-                <div id="container3"></div>
+                <div class="container-reg" id="asia">
+                    <div id="container3"></div>
+                </div>
             </div>
             <div class="region">
                 <h3 class="region-name">Oceania</h3>
                 <p class="region-cases blue">Cases: xxxxxxx</p>
-                <div id="container4"></div>
+                <div class="container-reg" id="oceania">
+                    <div id="container4"></div>
+                </div>
             </div>
         </div>
         <div class="region-row">
             <div class="region africa">
                 <h3 class="region-name">Africa</h3>
                 <p class="region-cases dark-blue">Cases: xxxxxxx</p>
-                <div id="container5"></div>
+                <div class="container-reg" id="africa">
+                    <div id="container5"></div>
+                </div>
             </div>
         </div>
     </section>
     <p class="updating">Virus Spectator 2023. Proudly created by Oleksii Lytovchenko</p>
 </article>
 </body>
+<script type="text/javascript" th:src="@{/js/charts.js}"></script>
 <script th:inline="javascript">
 
     /*<![CDATA[*/
@@ -198,48 +209,49 @@
 
     /*]]>*/
 
-    function getCases() {
+    var europe = "Europe";
+    var america = "Americas";
+    var asia = "Asia";
+    var oceania = "Oceania";
+    var africa = "Africa";
+    var world = "World";
+
+    function getWorldCases(area) {
         var array = [];
         var counter = 0;
+
         for (const [key, value] of Object.entries(cases)) {
             var date = [];
             date[0] = key;
-            date[1] = value[0];
-            date[2] = value[1];
-            date[3] = value[2];
+            for (const [key1, value1] of Object.entries(value)) {
+                if(key1 === area) {
+                    date[1] = value1[0];
+                    date[2] = value1[1];
+                    date[3] = value1[2];
+                    break;
+                }
+            }
             array[counter] = date;
             counter += 1;
         }
 
-        // for (const [key, value] of Object.entries(prediction)) {
-        //     var date = [];
-        //     date[0] = key;
-        //     // console.log(`${key}`);
-        //     for (const [key1, value1] of Object.entries(value)) {
-        //         if(key1 == "World") {
-        //             date[1] = value1[0];
-        //             date[2] = value1[1];
-        //             date[3] = value1[2];
-        //             break;
-        //         }
-        //         // console.log(`${key1}: ${value1}`);
-        //     }
-        //     array[counter] = date;
-        //     counter += 1;
-        // }
-
         return array;
     }
 
-    function getDeaths() {
+    function getWorldDeaths(area) {
         var array = [];
         var counter = 0;
         for (const [key, value] of Object.entries(deaths)) {
             var date = [];
             date[0] = key;
-            date[1] = value[0];
-            date[2] = value[1];
-            date[3] = value[2];
+            for (const [key1, value1] of Object.entries(value)) {
+                if(key1 === area) {
+                    date[1] = value1[0];
+                    date[2] = value1[1];
+                    date[3] = value1[2];
+                    break;
+                }
+            }
             array[counter] = date;
             counter += 1;
         }
@@ -247,9 +259,16 @@
         return array;
     }
 
-    chartLine("line-chart", getCases());
-    chartLine("column-chart", getDeaths());
+    chartLine("line-chart", getWorldCases(world));
+    chartLine("column-chart", getWorldDeaths(world));
     let typeOfChartLinear = true;
+
+    chartLine("container1", getWorldCases(europe));
+    chartLine("container2", getWorldCases(america));
+    chartLine("container3", getWorldCases(asia));
+    chartLine("container4", getWorldCases(oceania));
+    chartLine("container5", getWorldCases(africa));
+    let typeOfChartLinearRegion = true;
 
     function changeWorldChartMode(t, q) {
         $.ajax({
@@ -267,11 +286,11 @@
                     $("#line-chart-container").append(`<div id="line-chart"></div>`);
                     $("#column-chart-container").append(`<div id="column-chart"></div>`);
                     if(typeOfChartLinear) {
-                        chartLine("line-chart", getCases());
-                        chartLine("column-chart", getDeaths());
+                        chartLine("line-chart", getWorldCases(world));
+                        chartLine("column-chart", getWorldDeaths(world));
                     } else {
-                        chartColumn("line-chart", getCases());
-                        chartColumn("column-chart", getDeaths());
+                        chartColumn("line-chart", getWorldCases(world));
+                        chartColumn("column-chart", getWorldDeaths(world));
                     }
                 }
             ]
@@ -283,27 +302,55 @@
             type: "GET",
             url: "/changeWorld",
             dataType: "json",
-            data: jQuery.param({ data: d, type: t, quantity : q}),
+            data: jQuery.param({type: t, quantity : q}),
             complete: [
                 function (response) {
-                    // $("#line-chart").remove();
-                    // $("#column-chart").remove();
-                    // var obj = $.parseJSON(response.responseText);
-                    // cases = obj[0];
-                    // deaths = obj[1];
-                    // $("#line-chart-container").append(`<div id="line-chart"></div>`);
-                    // $("#column-chart-container").append(`<div id="column-chart"></div>`);
-                    // if(typeOfChartLinear) {
-                    //     chartLine("line-chart", getCases());
-                    //     chartLine("column-chart", getDeaths());
-                    // } else {
-                    //     chartColumn("line-chart", getCases());
-                    //     chartColumn("column-chart", getDeaths());
-                    // }
+                    $("#container1").remove();
+                    $("#container2").remove();
+                    $("#container3").remove();
+                    $("#container4").remove();
+                    $("#container5").remove();
+                    var obj = $.parseJSON(response.responseText);
+                    cases = obj[0];
+                    deaths = obj[1];
+                    $("#europe").append(`<div id="container1"></div>`);
+                    $("#america").append(`<div id="container2"></div>`);
+                    $("#asia").append(`<div id="container3"></div>`);
+                    $("#oceania").append(`<div id="container4"></div>`);
+                    $("#africa").append(`<div id="container5"></div>`);
+
+                    if(typeOfChartLinearRegion) {
+                        if(d === "cases") {
+                            chartLine("container1", getWorldCases(europe));
+                            chartLine("container2", getWorldCases(america));
+                            chartLine("container3", getWorldCases(asia));
+                            chartLine("container4", getWorldCases(oceania));
+                            chartLine("container5", getWorldCases(africa));
+                        } else {
+                            chartLine("container1", getWorldDeaths(europe));
+                            chartLine("container2", getWorldDeaths(america));
+                            chartLine("container3", getWorldDeaths(asia));
+                            chartLine("container4", getWorldDeaths(oceania));
+                            chartLine("container5", getWorldDeaths(africa));
+                        }
+                    } else {
+                        if(d === "cases") {
+                            chartColumn("container1", getWorldCases(europe));
+                            chartColumn("container2", getWorldCases(america));
+                            chartColumn("container3", getWorldCases(asia));
+                            chartColumn("container4", getWorldCases(oceania));
+                            chartColumn("container5", getWorldCases(africa));
+                        } else {
+                            chartColumn("container1", getWorldDeaths(europe));
+                            chartColumn("container2", getWorldDeaths(america));
+                            chartColumn("container3", getWorldDeaths(asia));
+                            chartColumn("container4", getWorldDeaths(oceania));
+                            chartColumn("container5", getWorldDeaths(africa));
+                        }
+                    }
                 }
             ]
         });
     }
 </script>
-<script type="text/javascript" th:src="@{/js/charts.js}"></script>
 </html>

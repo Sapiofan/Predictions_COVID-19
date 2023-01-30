@@ -3,6 +3,7 @@ package com.sapiofan.predictions.controllers;
 import com.sapiofan.predictions.entities.AllCountries;
 import com.sapiofan.predictions.entities.CountryData;
 import com.sapiofan.predictions.entities.WorldData;
+import com.sapiofan.predictions.entities.WorldDataHandler;
 import com.sapiofan.predictions.services.FileReaderService;
 import com.sapiofan.predictions.services.impl.Utils;
 import org.slf4j.Logger;
@@ -17,10 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @Controller
 public class MainController {
@@ -36,15 +34,45 @@ public class MainController {
     @GetMapping("/")
     public String home(Model model) {
         WorldData worldData = fileReaderService.getWorldData();
-        model.addAttribute("initial", worldData.existedWorldCases());
-        model.addAttribute("prediction", worldData.predictedWorldCases());
-        model.addAttribute("days", 120);
-        model.addAttribute("confirmedCases", 100000);
-        model.addAttribute("confirmedDeaths", 28);
-        model.addAttribute("predictionDays", 28);
-        model.addAttribute("newCases", 28);
-        model.addAttribute("newDeaths", 28);
+        WorldDataHandler worldDataHandler = new WorldDataHandler(worldData);
+        TreeMap<String, Map<String, List<Integer>>> worldCases = worldData.getWorldCases();
+        TreeMap<String, Map<String, List<Integer>>> worldDeaths = worldData.getWorldDeaths();
+        model.addAttribute("cases", worldCases);
+        model.addAttribute("deaths", worldDeaths);
+        model.addAttribute("days", worldData.existedWorldCases().size());
+        model.addAttribute("confirmedCases", worldDataHandler.getTodayConfirmedCases());
+        model.addAttribute("confirmedDeaths", worldDataHandler.getTodayConfirmedDeaths());
+        model.addAttribute("predictionDays", worldData.predictedWorldCases().size());
+        model.addAttribute("newCases", worldDataHandler.getTodayNewCases());
+        model.addAttribute("newDeaths", worldDataHandler.getTodayNewDeaths());
         return "home";
+    }
+
+    @GetMapping("/changeWorld")
+    @ResponseBody
+    public List<TreeMap<String, Map<String, List<Integer>>>> changeWorldChartMode(@RequestParam("type") Boolean type,
+                                                                @RequestParam("quantity") Boolean quantity) {
+        WorldData worldData = fileReaderService.getWorldData();
+        List<TreeMap<String, Map<String, List<Integer>>>> list = new ArrayList<>();
+        if (type) {
+            if (quantity) {
+                list.add(worldData.worldConfirmedCasesWeakly());
+                list.add(worldData.worldConfirmedDeathsWeakly());
+            } else {
+                list.add(worldData.worldConfirmedCases());
+                list.add(worldData.worldConfirmedDeaths());
+            }
+        } else {
+            if (quantity) {
+                list.add(worldData.worldCasesWeekly());
+                list.add(worldData.worldDeathsWeekly());
+            } else {
+                list.add(worldData.getWorldCases());
+                list.add(worldData.getWorldDeaths());
+            }
+        }
+
+        return list;
     }
 
     @GetMapping("/{name}")
