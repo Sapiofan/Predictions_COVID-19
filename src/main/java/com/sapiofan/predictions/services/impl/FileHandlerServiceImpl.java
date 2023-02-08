@@ -78,15 +78,18 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     public void readData(Data data) {
         File statisticsFolder = new File("src/main/resources/data/");
         File[] listOfFiles = statisticsFolder.listFiles();
-        Map<String, Integer> labels = data.getLabelsByDate();
+        List<String> sortedListOfFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.list())));
+        sortedListOfFiles = sortedListOfFiles.stream().filter(f -> f.contains(".csv") &&
+                !utils.compareDateAndString(f, DAYS, formatter)).collect(Collectors.toList());
+        sortedListOfFiles.sort(data.dateComparator());
         int counter = 0;
+        Map<String, Integer> labels = data.getLabelsByDate();
+        for (String sortedListOfFile : sortedListOfFiles) {
+            labels.put(sortedListOfFile, counter++);
+        }
         boolean header = true;
 
         for (File listOfFile : listOfFiles) {
-            if (listOfFile.getName().contains(".csv") && !utils.compareDateAndString(listOfFile.getName(), DAYS, formatter)) {
-                labels.put(listOfFile.getName(), counter);
-                counter++;
-            }
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
                 String[] values;
                 while ((values = csvReader.readNext()) != null) {
