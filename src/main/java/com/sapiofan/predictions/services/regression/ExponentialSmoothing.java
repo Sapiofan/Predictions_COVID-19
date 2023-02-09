@@ -19,7 +19,7 @@ public class ExponentialSmoothing {
 
     private final int SEASONAL_PERIOD = 7;
     private int EXISTED_PERIOD_AFTER_SEASONAL;
-    private final int SEASONAL_REPETITION = 3;
+    private final int SEASONAL_REPETITION = 8;
 
     private double ALPHA = 0;
     private double BETTA = 0;

@@ -30,13 +30,14 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
-    private final int DAYS = 121;
+    private int DAYS = 181;
 
     @Autowired
     private Utils utils;
 
     @Override
-    public void downloadFilesWithData() {
+    public void downloadFilesWithData(int days) {
+        DAYS = days + 1;
         String urlString = "https://raw.githubusercontent.com/CSSEGISandData/" +
                 "COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/";
         String temp = urlString;

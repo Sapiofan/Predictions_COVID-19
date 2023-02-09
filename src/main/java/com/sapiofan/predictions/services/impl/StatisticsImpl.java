@@ -26,7 +26,7 @@ public class StatisticsImpl implements Statistics {
 
     private static final Logger log = LoggerFactory.getLogger(StatisticsImpl.class);
 
-    private final int DAYS = 120;
+    private final int DAYS = 180;
 
     @Autowired
     private FileHandlerService fileHandlerService;
@@ -34,50 +34,53 @@ public class StatisticsImpl implements Statistics {
     @Autowired
     private Utils utils;
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void doSomethingAfterStartup() {
-//        new Timer().scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Data data = getWorldData();
-//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-//
-//                log.warn("Started calculating exponential smooth");
-//                for (String country : utils.getCountries()) {
-//                    executor.execute(() -> getCountryDataExponential(data, country));
-//                }
-//
-//                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
-//                for (String area : areas) {
-//                    executor.execute(() -> getCountryDataExponential(data, area));
-//                }
-//                executor.execute(() -> getCountryDataExponential(data, "World"));
-//
-//                while (true) {
-//                    if (executor.getActiveCount() == 0) {
-//                        handlePredictedCases(data);
-//                        log.warn("Ended calculating exponential smooth");
-//                        log.warn("Start writing to csv");
-//                        fileHandlerService.writeToCSV(data);
-//                        log.warn("End writing to csv");
-//                        break;
-//                    } else {
-//                        try {
-//                            Thread.sleep(3000);
-//                        } catch (InterruptedException e) {
-//                            log.error("Can't sleep timer: " + e);
-//                        }
-//                    }
-//                }
-////                getCountryDataLinear(data);
-//            }
-//        }, 0, 86400000);
-//    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void doSomethingAfterStartup() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Data data = getWorldData();
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+
+                log.warn("Started calculating exponential smooth");
+                Date start = new Date();
+
+                for (String country : utils.getCountries()) {
+                    executor.execute(() -> getCountryDataExponential(data, country));
+                }
+
+                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+                for (String area : areas) {
+                    executor.execute(() -> getCountryDataExponential(data, area));
+                }
+                executor.execute(() -> getCountryDataExponential(data, "World"));
+
+                while (true) {
+                    if (executor.getActiveCount() == 0) {
+                        handlePredictedCases(data);
+                        Date end = new Date();
+                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime()-start.getTime())/1000);
+                        log.warn("Start writing to csv");
+                        fileHandlerService.writeToCSV(data);
+                        log.warn("End writing to csv");
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            log.error("Can't sleep timer: " + e);
+                        }
+                    }
+                }
+//                getCountryDataLinear(data);
+            }
+        }, 0, 86400000);
+    }
 
     @Override
     public Data getWorldData() {
         log.warn("Started downloading of csv files from the site");
-        fileHandlerService.downloadFilesWithData();
+        fileHandlerService.downloadFilesWithData(DAYS);
         log.warn("Ended downloading of csv files from the site");
         Data data = new Data();
         fileHandlerService.readData(data);
@@ -417,9 +420,11 @@ public class StatisticsImpl implements Statistics {
     private void calculatePredictedConfirmedCases(Data data) {
         TreeMap<String, Map<String, Long>> map = new TreeMap<>(data.dateComparator());
         TreeMap<String, Map<String, Long>> result = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, List<Integer>>> prediction = new TreeMap<>(data.dateComparator());
         map.putAll(data.getConfirmedCases());
+        prediction.putAll(data.getPredictionNewCases());
         Map<String, Long> lastDayData = map.lastEntry().getValue();
-        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : prediction.entrySet()) {
             Map<String, Long> predictedDate = new HashMap<>();
             for (Map.Entry<String, Long> stringIntegerEntry : lastDayData.entrySet()) {
                 if (stringMapEntry.getValue().get(stringIntegerEntry.getKey()) != null) {

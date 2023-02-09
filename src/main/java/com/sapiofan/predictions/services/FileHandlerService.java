@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileHandlerService {
-    void downloadFilesWithData();
+    void downloadFilesWithData(int days);
 
     void readData(Data data);
 
