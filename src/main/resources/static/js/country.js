@@ -1,14 +1,13 @@
 function chartLine(container, data) {
-    // anychart.onDocumentReady(function () {
     // create data set on our data
     var dataSet = anychart.data.set(data);
 
     // map data for the first series, take x from the zero column and value from the first column of data set
-    var firstSeriesData = dataSet.mapAs({x: 0, value: 1});
+    var firstSeriesData = dataSet.mapAs({x: 0, value: 3});
 
-    var secondSeriesData = dataSet.mapAs({x: 0, value: 2});
+    var secondSeriesData = dataSet.mapAs({x: 0, value: 1});
 
-    var thirdSeriesData = dataSet.mapAs({x: 0, value: 3});
+    var thirdSeriesData = dataSet.mapAs({x: 0, value: 2});
 
     // create line chart
     var chart = anychart.line();
@@ -33,8 +32,9 @@ function chartLine(container, data) {
 
     // create first series with mapped data
     var firstSeries = chart.line(firstSeriesData);
-    firstSeries.name('Existed data and prediction');
-    firstSeries.color("black");
+    firstSeries.name('High bound');
+    // firstSeries.color("#EF476F");
+    firstSeries.normal().stroke("#EF476F", 2);
     firstSeries.hovered().markers().enabled(true).type('circle').size(4);
     firstSeries
         .tooltip()
@@ -44,8 +44,8 @@ function chartLine(container, data) {
         .offsetY(5);
 
     var secondSeries = chart.line(secondSeriesData);
-    secondSeries.name('Low bound');
-    secondSeries.color("blue");
+    secondSeries.name('Existed data and prediction');
+    secondSeries.normal().stroke("#118AB2", 2);
     secondSeries.hovered().markers().enabled(true).type('circle').size(4);
     secondSeries
         .tooltip()
@@ -55,8 +55,8 @@ function chartLine(container, data) {
         .offsetY(5);
 
     var thirdSeries = chart.line(thirdSeriesData);
-    thirdSeries.name('High bound');
-    thirdSeries.color("blue");
+    thirdSeries.name('Low bound');
+    thirdSeries.normal().stroke("#EF476F", 2);
     thirdSeries.hovered().markers().enabled(true).type('circle').size(4);
     thirdSeries
         .tooltip()
@@ -80,79 +80,94 @@ function chartLine(container, data) {
 }
 
 function chartColumn(container, data) {
-        // create data set on our data
-        var dataSet = anychart.data.set(data);
+    // create data set on our data
+    var dataSet = anychart.data.set(data);
 
-        // map data for the first series, take x from the zero column and value from the first column of data set
-        var firstSeriesData = dataSet.mapAs({x: 0, value: 1});
+    // map data for the first series, take x from the zero area and value from the first area of data set
+    var firstSeriesData = dataSet.mapAs({ x: 0, value: 3 });
 
-        // map data for the second series, take x from the zero column and value from the second column of data set
-        var secondSeriesData = dataSet.mapAs({x: 0, value: 2});
+    // map data for the second series, take x from the zero area and value from the second area of data set
+    var secondSeriesData = dataSet.mapAs({ x: 0, value: 1 });
 
-        // map data for the second series, take x from the zero column and value from the third column of data set
-        var thirdSeriesData = dataSet.mapAs({x: 0, value: 3});
+    // map data for the second series, take x from the zero area and value from the third area of data set
+    var thirdSeriesData = dataSet.mapAs({ x: 0, value: 2 });
 
-        // create bar chart
-        var chart = anychart.column();
+    // create bar chart
+    var chart = anychart.area();
 
-        // turn on chart animation
-        chart.animation(true);
+    // turn on chart animation
+    chart.animation(true);
 
-        // force chart to stack values by Y scale.
-        chart.yScale().stackMode('value');
+    // turn on the crosshair
+    var crosshair = chart.crosshair();
+    crosshair.enabled(true).yStroke(null).xStroke('#fff').zIndex(39);
+    crosshair.yLabel().enabled(false);
 
-        // set chart title text settings
-        chart.title('COVID-19');
-        chart.title().padding([0, 0, 5, 0]);
+    // force chart to stack values by Y scale.
+    chart.yScale().stackMode('value');
 
-        // helper function to setup label settings for all series
-        var setupSeriesLabels = function (series, name) {
-            series.name(name).stroke('3 #fff 1');
-            series.hovered().stroke('3 #fff 1');
-        };
+    // set chart title text settings
+    chart.title('COVID-19');
 
-        // temp variable to store series instance
-        var series;
+    // helper function to setup label settings for all series
+    var setupSeriesLabels = function (series, name) {
+        series
+            .name(name)
+            .stroke('3 #fff 1')
+            .fill(function () {
+                return this.sourceColor + ' 0.8';
+            });
+        series.hovered().stroke('3 #fff 1');
+        series
+            .hovered()
+            .markers()
+            .enabled(true)
+            .type('circle')
+            .size(4)
+            .stroke('1.5 #fff');
+        series.markers().zIndex(100);
+    };
 
-        // create first series with mapped data
-        series = chart.column(firstSeriesData);
-        setupSeriesLabels(series, 'Prediction');
+    // temp variable to store series instance
+    var series;
 
-        // create second series with mapped data
-        series = chart.column(secondSeriesData);
-        setupSeriesLabels(series, 'Low bound');
+    // create first series with mapped data
+    series = chart.area(firstSeriesData);
+    setupSeriesLabels(series, 'High bound');
 
-        // create third series with mapped data
-        series = chart.column(thirdSeriesData);
-        setupSeriesLabels(series, 'High bound');
+    // create second series with mapped data
+    series = chart.area(secondSeriesData);
+    setupSeriesLabels(series, 'Existed data and prediction');
 
-        // turn on legend
-        chart.legend().enabled(true).fontSize(13).padding([0, 0, 20, 0]);
-        // set yAxis labels formatter
-        chart.yAxis().labels().format('{%Value}{groupsSeparator: }');
+    // create third series with mapped data
+    series = chart.area(thirdSeriesData);
+    setupSeriesLabels(series, 'Low bound');
 
-        // set titles for axes
-        chart.xAxis().title('Date');
-        chart.yAxis().title('Cases');
+    // turn on legend
+    chart.legend().enabled(true).fontSize(13).padding([0, 0, 20, 0]);
 
-        // set interactivity hover
-        chart.interactivity().hoverMode('by-x');
+    // set titles for axises
+    chart.xAxis().title("Date");
+    chart.yAxis().title('Cases');
 
-        // chart.tooltip().valuePrefix('$').displayMode('union');
+    // interactivity and tooltip settings
+    chart.interactivity().hoverMode('by-x');
+    chart
+        .tooltip()
+        .displayMode('union');
 
-        chart.barsPadding(0);
-        chart.barGroupsPadding(0);
+    // chart.tooltip().valuePrefix('$').displayMode('union');
 
-        // set container id for the chart
-        chart.container(container);
+    // set container id for the chart
+    chart.container(container);
 
-        // initiate chart drawing
-        chart.draw();
+    // initiate chart drawing
+    chart.draw();
 
-        var trial = document.getElementsByClassName("anychart-credits")
-        for (let i = 0; i < trial.length; i++) {
-            trial[i].remove();
-        }
+    var trial = document.getElementsByClassName("anychart-credits")
+    for (let i = 0; i < trial.length; i++) {
+        trial[i].remove();
+    }
 }
 
 

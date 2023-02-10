@@ -29,13 +29,13 @@
 <div th:insert="header :: header"></div>
 <article>
     <section id="brief">
-        <p class="details">For last <span th:text="${days}"></span> days, there have been
+        <p class="details">Up to <span th:text="${lastExistedDay}"></span>, there have been
             confirmed <span class="orange"><span th:text="${confirmedCases}"></span> cases</span>
             of <span class="green">COVID-19</span> and <span class="red"><span th:text="${confirmedDeaths}"></span>
                 deaths</span>.
             For the next <span th:text="${predictionDays}"></span> days have been predicted approximately
-            <span class="orange"><span th:text="${newCases}"></span> new cases</span>
-            and <span class="red"><span th:text="${newDeaths}"></span> new deaths</span>.</p>
+            <span class="orange"><span th:text="${predictedCases}"></span> new cases</span>
+            and <span class="red"><span th:text="${predictedDeaths}"></span> new deaths</span>.</p>
     </section>
     <section id="charts">
         <div class="flex-wrapper">
@@ -82,7 +82,7 @@
                     <h1 class="cases"><span th:text="${confirmedCases}"></span></h1>
                     <h4>Confirmed cases</h4>
                     <h1 class="cases"><span th:text="${predictedCases}"></span></h1>
-                    <h4>Predicted cases</h4>
+                    <h4>Predicted cases (up to <span th:text="${lastDate}"></span>)</h4>
                 </div>
                 <div class="container-area" id="line-chart-container">
                     <div id="line-chart"></div>
@@ -95,7 +95,7 @@
                     <h1 class="cases"><span th:text="${confirmedDeaths}"></span></h1>
                     <h4>Deaths</h4>
                     <h1 class="cases"><span th:text="${predictedDeaths}"></span></h1>
-                    <h4>Predicted deaths</h4>
+                    <h4>Predicted deaths (up to <span th:text="${lastDate}"></span>)</h4>
                 </div>
             </div>
             <div class="container-area" id="column-chart-container">
@@ -156,14 +156,25 @@
         <div class="region-row">
             <div class="region">
                 <h3 class="region-name">Europe</h3>
-                <p class="region-cases red">Cases: xxxxxxx</p>
+                <div class="flex-wrapper">
+                    <p class="region-cases red">Confirmed cases: <span th:text="${europeCases}"></span></p>
+                    <p class="region-cases red" style="margin-left: 140px">Confirmed deaths: <span th:text="${europeDeaths}"></span></p>
+                </div>
+<!--                <div class="flex-wrapper">-->
+<!--                    <p class="region-cases red">Predicted cases: <span th:text="${europePredictedCases}"></span></p>-->
+<!--                    <p class="region-cases red">Predicted deaths: <span th:text="${europePredictedDeaths}"></span></p>-->
+<!--                </div>-->
                 <div class="container-reg" id="europe">
                     <div id="container1"></div>
                 </div>
             </div>
             <div class="region">
                 <h3 class="region-name">Americas</h3>
-                <p class="region-cases orange">Cases: xxxxxxx</p>
+                <div class="flex-wrapper">
+                    <p class="region-cases orange">Confirmed cases: <span th:text="${americaCases}"></span></p>
+                    <p class="region-cases orange" style="margin-left: 140px">
+                        Confirmed deaths: <span th:text="${americaDeaths}"></span></p>
+                </div>
                 <div class="container-reg" id="america">
                     <div id="container2"></div>
                 </div>
@@ -172,14 +183,22 @@
         <div class="region-row">
             <div class="region">
                 <h3 class="region-name">Asia</h3>
-                <p class="region-cases green">Cases: xxxxxxx</p>
+                <div class="flex-wrapper">
+                    <p class="region-cases green">Confirmed cases: <span th:text="${asiaCases}"></span></p>
+                    <p class="region-cases green" style="margin-left: 140px">
+                        Confirmed deaths: <span th:text="${asiaDeaths}"></span></p>
+                </div>
                 <div class="container-reg" id="asia">
                     <div id="container3"></div>
                 </div>
             </div>
             <div class="region">
                 <h3 class="region-name">Oceania</h3>
-                <p class="region-cases blue">Cases: xxxxxxx</p>
+                <div class="flex-wrapper">
+                    <p class="region-cases blue">Confirmed cases: <span th:text="${oceaniaCases}"></span></p>
+                    <p class="region-cases blue" style="margin-left: 140px">
+                        Confirmed deaths: <span th:text="${oceaniaDeaths}"></span></p>
+                </div>
                 <div class="container-reg" id="oceania">
                     <div id="container4"></div>
                 </div>
@@ -188,7 +207,11 @@
         <div class="region-row">
             <div class="region africa">
                 <h3 class="region-name">Africa</h3>
-                <p class="region-cases dark-blue">Cases: xxxxxxx</p>
+                <div class="flex-wrapper">
+                    <p class="region-cases dark-blue">Confirmed cases: <span th:text="${africaCases}"></span></p>
+                    <p class="region-cases dark-blue" style="margin-left: 140px">
+                        Confirmed deaths: <span th:text="${africaDeaths}"></span></p>
+                </div>
                 <div class="container-reg" id="africa">
                     <div id="container5"></div>
                 </div>

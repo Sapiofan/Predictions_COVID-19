@@ -1,9 +1,6 @@
 package com.sapiofan.predictions.controllers;
 
-import com.sapiofan.predictions.entities.AllCountries;
-import com.sapiofan.predictions.entities.CountryData;
-import com.sapiofan.predictions.entities.WorldData;
-import com.sapiofan.predictions.entities.WorldDataHandler;
+import com.sapiofan.predictions.entities.*;
 import com.sapiofan.predictions.services.FileReaderService;
 import com.sapiofan.predictions.services.impl.Utils;
 import org.slf4j.Logger;
@@ -39,12 +36,25 @@ public class MainController {
         TreeMap<String, Map<String, List<Integer>>> worldDeaths = worldData.getWorldDeaths();
         model.addAttribute("cases", worldCases);
         model.addAttribute("deaths", worldDeaths);
-        model.addAttribute("days", worldData.existedWorldCases().size());
-        model.addAttribute("confirmedCases", worldDataHandler.getTodayConfirmedCases());
-        model.addAttribute("confirmedDeaths", worldDataHandler.getTodayConfirmedDeaths());
+        model.addAttribute("lastExistedDay", worldDataHandler.getLastExistedDate());
+        model.addAttribute("confirmedCases", worldDataHandler.getTodayConfirmedCases("World"));
+        model.addAttribute("confirmedDeaths", worldDataHandler.getTodayConfirmedDeaths("World"));
         model.addAttribute("predictionDays", worldData.predictedWorldCases().size());
-        model.addAttribute("newCases", worldDataHandler.getTodayNewCases());
-        model.addAttribute("newDeaths", worldDataHandler.getTodayNewDeaths());
+        model.addAttribute("predictedCases", worldDataHandler.getPredictedCases("World"));
+        model.addAttribute("predictedDeaths", worldDataHandler.getPredictedDeaths("World"));
+        model.addAttribute("lastDate", worldDataHandler.getLastDate());
+
+        model.addAttribute("europeCases", worldDataHandler.getTodayConfirmedCases("Europe"));
+        model.addAttribute("europeDeaths", worldDataHandler.getTodayConfirmedDeaths("Europe"));
+        model.addAttribute("americaCases", worldDataHandler.getTodayConfirmedCases("Americas"));
+        model.addAttribute("americaDeaths", worldDataHandler.getTodayConfirmedDeaths("Americas"));
+        model.addAttribute("asiaCases", worldDataHandler.getTodayConfirmedCases("Asia"));
+        model.addAttribute("asiaDeaths", worldDataHandler.getTodayConfirmedDeaths("Asia"));
+        model.addAttribute("oceaniaCases", worldDataHandler.getTodayConfirmedCases("Oceania"));
+        model.addAttribute("oceaniaDeaths", worldDataHandler.getTodayConfirmedDeaths("Oceania"));
+        model.addAttribute("africaCases", worldDataHandler.getTodayConfirmedCases("Africa"));
+        model.addAttribute("africaDeaths", worldDataHandler.getTodayConfirmedDeaths("Africa"));
+
         return "home";
     }
 
@@ -76,17 +86,20 @@ public class MainController {
     }
 
     @GetMapping("/{name}")
-    public String getCountryStatistics(Model model, @PathVariable("name") String name) {
-        CountryData countryData = fileReaderService.getCountryData(name);
-        model.addAttribute("country", name);
+    public String getCountryStatistics(Model model, @PathVariable("name") String country) {
+        CountryData countryData = fileReaderService.getCountryData(country);
+        CountryDataHandler countryDataHandler = new CountryDataHandler(countryData);
+        model.addAttribute("country", country);
         model.addAttribute("cases", countryData.getCountryCases());
         model.addAttribute("deaths", countryData.getCountryDeaths());
-        model.addAttribute("days", 120);
-        model.addAttribute("confirmedCases", 100000);
-        model.addAttribute("confirmedDeaths", 28);
-        model.addAttribute("predictionDays", 28);
-        model.addAttribute("newCases", 28);
-        model.addAttribute("newDeaths", 28);
+        model.addAttribute("lastExistedDay", countryDataHandler.getLastExistedDate());
+        model.addAttribute("confirmedCases", countryDataHandler.getTodayConfirmedCases());
+        model.addAttribute("confirmedDeaths", countryDataHandler.getTodayConfirmedDeaths());
+        model.addAttribute("predictionDays", countryData.predictedCountryCases().size());
+        model.addAttribute("predictedCases", countryDataHandler.getPredictedCases());
+        model.addAttribute("predictedDeaths", countryDataHandler.getPredictedDeaths());
+        model.addAttribute("lastDate", countryDataHandler.getLastDate());
+
         return "country";
     }
 

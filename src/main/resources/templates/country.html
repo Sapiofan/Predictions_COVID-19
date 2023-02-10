@@ -30,13 +30,13 @@
 <article>
     <section id="brief">
         <h2 class="dark-blue"><span th:text="${country}"></span></h2>
-        <p class="details">For last <span th:text="${days}"></span> days, there have been
+        <p class="details">Up to <span th:text="${lastExistedDay}"></span>, there have been
             confirmed <span class="orange"><span th:text="${confirmedCases}"></span> cases</span>
             of <span class="green">COVID-19</span> and <span class="red"><span th:text="${confirmedDeaths}"></span>
                 deaths</span>.
             For the next <span th:text="${predictionDays}"></span> days have been predicted approximately
-            <span class="orange"><span th:text="${newCases}"></span> new cases</span>
-            and <span class="red"><span th:text="${newDeaths}"></span> new deaths</span>.</p>
+            <span class="orange"><span th:text="${predictedCases}"></span> new cases</span>
+            and <span class="red"><span th:text="${predictedDeaths}"></span> new deaths</span>.</p>
     </section>
     <section id="charts">
         <div class="flex-wrapper">
@@ -83,7 +83,7 @@
                     <h1 class="cases"><span th:text="${confirmedCases}"></span></h1>
                     <h4>Confirmed cases</h4>
                     <h1 class="cases"><span th:text="${predictedCases}"></span></h1>
-                    <h4>Predicted cases</h4>
+                    <h4>Predicted cases (up to <span th:text="${lastDate}"></span>)</h4>
                 </div>
                 <div class="container-area" id="line-chart-container">
                     <div id="line-chart"></div>
@@ -96,7 +96,7 @@
                     <h1 class="cases"><span th:text="${confirmedDeaths}"></span></h1>
                     <h4>Deaths</h4>
                     <h1 class="cases"><span th:text="${predictedDeaths}"></span></h1>
-                    <h4>Predicted deaths</h4>
+                    <h4>Predicted deaths (up to <span th:text="${lastDate}"></span>)</h4>
                 </div>
             </div>
             <div class="container-area" id="column-chart-container">
