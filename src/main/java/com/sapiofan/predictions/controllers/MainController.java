@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Controller
 public class MainController {
@@ -61,7 +64,7 @@ public class MainController {
     @GetMapping("/changeWorld")
     @ResponseBody
     public List<TreeMap<String, Map<String, List<Integer>>>> changeWorldChartMode(@RequestParam("type") Boolean type,
-                                                                @RequestParam("quantity") Boolean quantity) {
+                                                                                  @RequestParam("quantity") Boolean quantity) {
         WorldData worldData = fileReaderService.getWorldData();
         List<TreeMap<String, Map<String, List<Integer>>>> list = new ArrayList<>();
         if (type) {

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -25,6 +26,8 @@ public class ExponentialSmoothing {
     private double BETTA = 0;
     private double GAMMA = 0;
     private double error = -1;
+
+    private double MIN_SEASONAL = 0.0000001;
 
     public void predictionCases(Data data, Map<String, Integer> cases, String country) {
         if (cases == null || cases.size() == 0) {
@@ -140,10 +143,17 @@ public class ExponentialSmoothing {
 
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             if (level.get(i) == 0) {
-                seasonalCopy.add(Precision.round(((1 - gamma) * seasonalCopy.get(i)), 7));
+                if (new BigDecimal(gamma).equals(new BigDecimal(1))) {
+                    seasonalCopy.add(Precision.round(((1 - gamma) * seasonalCopy.get(i)), 7));
+                } else {
+                    seasonalCopy.add(Precision.round((0.01 * seasonalCopy.get(i)), 7));
+                }
             } else {
                 seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i))
                         / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
+            }
+            if (seasonalCopy.get(seasonalCopy.size() - 1) < MIN_SEASONAL) {
+                seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
             }
             level.add(Precision.round((alpha * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1)
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
@@ -200,10 +210,18 @@ public class ExponentialSmoothing {
 
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
             if (level.get(i) == 0) {
+                if (new BigDecimal(gamma).equals(new BigDecimal(1))) {
+                    seasonalCopy.add(Precision.round(((1 - gamma) * seasonalCopy.get(i)), 7));
+                } else {
+                    seasonalCopy.add(Precision.round((0.01 * seasonalCopy.get(i)), 7));
+                }
                 seasonalCopy.add(Precision.round(((1 - gamma) * seasonalCopy.get(i)), 7));
             } else {
                 seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i))
                         / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
+            }
+            if (seasonalCopy.get(seasonalCopy.size() - 1) < MIN_SEASONAL) {
+                seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
             }
             level.add(Precision.round((alpha * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1)
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
@@ -224,12 +242,12 @@ public class ExponentialSmoothing {
                 .collect(Collectors.toList());
 
         List<Double> list = new ArrayList<>();
+        double num = Precision.round(seasonalPeriodCases.stream().mapToDouble(v -> v).sum()
+                / seasonalPeriodCases.size(), 7);
         for (Integer seasonalPeriodCase : seasonalPeriodCases) {
-            double num = Precision.round(seasonalPeriodCases.stream().mapToDouble(v -> v).sum()
-                    / seasonalPeriodCases.size(), 7);
             if (num != 0) {
                 if (seasonalPeriodCase == 0) {
-                    list.add(Precision.round(num, 7));
+                    list.add(0.1);
                     continue;
                 }
                 list.add(Precision.round(seasonalPeriodCase / num, 7));
@@ -313,7 +331,8 @@ public class ExponentialSmoothing {
                 .filter(integerEntry -> integerEntry.getKey().equals(stringIntegerEntry.getKey()))
                 .findFirst()
                 .map(Map.Entry::getValue)
-                .orElse(0)))).sum();
+                .orElse(0))))
+                .sum();
 
         return sum / predictions.size();
     }

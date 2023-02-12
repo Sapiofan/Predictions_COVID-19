@@ -28,54 +28,58 @@ public class StatisticsImpl implements Statistics {
 
     private final int DAYS = 180;
 
+    private static final String WORLD = "World";
+    private static final String CSV_EXTENSION = ".csv";
+
     @Autowired
     private FileHandlerService fileHandlerService;
 
     @Autowired
     private Utils utils;
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void doSomethingAfterStartup() {
-//        new Timer().scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Data data = getWorldData();
-//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-//
-//                log.warn("Started calculating exponential smooth");
-//                Date start = new Date();
-//
-//                for (String country : utils.getCountries()) {
-//                    executor.execute(() -> getCountryDataExponential(data, country));
-//                }
-//
-//                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
-//                for (String area : areas) {
-//                    executor.execute(() -> getCountryDataExponential(data, area));
-//                }
-//                executor.execute(() -> getCountryDataExponential(data, "World"));
-//
-//                while (true) {
-//                    if (executor.getActiveCount() == 0) {
-//                        handlePredictedCases(data);
-//                        Date end = new Date();
-//                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime()-start.getTime())/1000);
-//                        log.warn("Start writing to csv");
-//                        fileHandlerService.writeToCSV(data);
-//                        log.warn("End writing to csv");
-//                        break;
-//                    } else {
-//                        try {
-//                            Thread.sleep(3000);
-//                        } catch (InterruptedException e) {
-//                            log.error("Can't sleep timer: " + e);
-//                        }
-//                    }
-//                }
-////                getCountryDataLinear(data);
-//            }
-//        }, 0, 86400000);
-//    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void doSomethingAfterStartup() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Data data = getWorldData();
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+
+                log.warn("Started calculating exponential smooth");
+                Date start = new Date();
+
+                for (String country : utils.getCountries()) {
+                    executor.execute(() -> getCountryDataExponential(data, country));
+                }
+
+                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+                for (String area : areas) {
+                    executor.execute(() -> getCountryDataExponential(data, area));
+                }
+//                executor.execute(() -> getCountryDataExponential(data, "Brazil"));
+                executor.execute(() -> getCountryDataExponential(data, WORLD));
+
+                while (true) {
+                    if (executor.getActiveCount() == 0) {
+                        handlePredictedCases(data);
+                        Date end = new Date();
+                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
+                        log.warn("Start writing to csv");
+                        fileHandlerService.writeToCSV(data);
+                        log.warn("End writing to csv");
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            log.error("Can't sleep timer: " + e);
+                        }
+                    }
+                }
+//                getCountryDataLinear(data);
+            }
+        }, 0, 86400000);
+    }
 
     @Override
     public Data getWorldData() {
@@ -98,7 +102,7 @@ public class StatisticsImpl implements Statistics {
 
     @Override
     public void getWorldStatistics(Data data) {
-        getCountryDataExponential(data, "World");
+        getCountryDataExponential(data, WORLD);
     }
 
     @Override
@@ -130,7 +134,7 @@ public class StatisticsImpl implements Statistics {
 
             Map<String, Long> previousDay = data.getConfirmedCases().get(LocalDate.parse(stringMapEntry.getKey()
                             .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
-                    .minusDays(1L).format(formatter) + ".csv");
+                    .minusDays(1L).format(formatter) + CSV_EXTENSION);
 
             Map<String, Integer> newCasesDay = new HashMap<>();
             for (Map.Entry<String, Long> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
@@ -152,7 +156,7 @@ public class StatisticsImpl implements Statistics {
 
         Map<String, Integer> worldCases = getWorldCases(data);
 
-        data.getNewCases().forEach((key, value) -> value.put("World", worldCases.get(key)));
+        data.getNewCases().forEach((key, value) -> value.put(WORLD, worldCases.get(key)));
 
         Map<String, String> countries = utils.getCountriesByRegions();
         Set<String> regions = new HashSet<>(countries.values());
@@ -174,7 +178,7 @@ public class StatisticsImpl implements Statistics {
 
             Map<String, Integer> previousDay = data.getDeaths().get(LocalDate.parse(stringMapEntry.getKey()
                             .substring(0, stringMapEntry.getKey().lastIndexOf(".")), formatter)
-                    .minusDays(1L).format(formatter) + ".csv");
+                    .minusDays(1L).format(formatter) + CSV_EXTENSION);
 
 
             Map<String, Integer> newDeathsDay = new HashMap<>();
@@ -184,7 +188,7 @@ public class StatisticsImpl implements Statistics {
                     break;
                 }
                 newDeathsDay.put(stringIntegerEntry.getKey(),
-                         Math.max(stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()), 0));
+                        Math.max(stringIntegerEntry.getValue() - previousDay.get(stringIntegerEntry.getKey()), 0));
             }
             if (flag) {
                 flag = false;
@@ -202,7 +206,7 @@ public class StatisticsImpl implements Statistics {
                         .stream()
                         .filter(stringIntegerEntry -> stringIntegerEntry.getKey().equals(key))
                         .findFirst()
-                        .ifPresent(stringIntegerEntry -> value.put("World", stringIntegerEntry.getValue())));
+                        .ifPresent(stringIntegerEntry -> value.put(WORLD, stringIntegerEntry.getValue())));
 
         Map<String, String> countries = utils.getCountriesByRegions();
         Set<String> regions = new HashSet<>(countries.values());
@@ -230,12 +234,12 @@ public class StatisticsImpl implements Statistics {
     private void calculateConfirmedCasesForWorld(Data data, Set<String> regions) {
         long sum = 0;
         for (Map.Entry<String, Map<String, Long>> stringMapEntry : data.getConfirmedCases().entrySet()) {
-            for (Map.Entry<String, Long> stringLongEntry : stringMapEntry.getValue().entrySet()) {
-                if (regions.contains(stringLongEntry.getKey())) {
-                    sum += stringLongEntry.getValue();
-                }
-            }
-            stringMapEntry.getValue().put("World", sum);
+            sum += stringMapEntry.getValue().entrySet()
+                    .stream()
+                    .filter(stringLongEntry -> regions.contains(stringLongEntry.getKey()))
+                    .mapToLong(Map.Entry::getValue)
+                    .sum();
+            stringMapEntry.getValue().put(WORLD, sum);
             sum = 0;
         }
     }
@@ -243,12 +247,12 @@ public class StatisticsImpl implements Statistics {
     private void calculateConfirmedDeathsForWorld(Data data, Set<String> regions) {
         int sum = 0;
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
-            for (Map.Entry<String, Integer> stringLongEntry : stringMapEntry.getValue().entrySet()) {
-                if (regions.contains(stringLongEntry.getKey())) {
-                    sum += stringLongEntry.getValue();
-                }
-            }
-            stringMapEntry.getValue().put("World", sum);
+            sum += stringMapEntry.getValue().entrySet()
+                    .stream()
+                    .filter(stringLongEntry -> regions.contains(stringLongEntry.getKey()))
+                    .mapToInt(Map.Entry::getValue)
+                    .sum();
+            stringMapEntry.getValue().put(WORLD, sum);
             sum = 0;
         }
     }
@@ -256,12 +260,12 @@ public class StatisticsImpl implements Statistics {
     private void calculateConfirmedCasesForRegion(String region, Map<String, String> countries, Data data) {
         long sum = 0;
         for (Map.Entry<String, Map<String, Long>> stringMapEntry : data.getConfirmedCases().entrySet()) {
-            for (Map.Entry<String, Long> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
-                if (countries.get(stringIntegerEntry.getKey()) != null
-                        && countries.get(stringIntegerEntry.getKey()).equals(region)) {
-                    sum += stringIntegerEntry.getValue();
-                }
-            }
+            sum += stringMapEntry.getValue().entrySet()
+                    .stream()
+                    .filter(stringIntegerEntry -> countries.get(stringIntegerEntry.getKey()) != null
+                    && countries.get(stringIntegerEntry.getKey()).equals(region))
+                    .mapToLong(Map.Entry::getValue)
+                    .sum();
             stringMapEntry.getValue().put(region, sum);
             sum = 0;
         }
@@ -270,27 +274,27 @@ public class StatisticsImpl implements Statistics {
     private void calculateConfirmedDeathsForRegion(String region, Map<String, String> countries, Data data) {
         int sum = 0;
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
-            for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
-                if (countries.get(stringIntegerEntry.getKey()) != null
-                        && countries.get(stringIntegerEntry.getKey()).equals(region)) {
-                    sum += stringIntegerEntry.getValue();
-                }
-            }
+            sum += stringMapEntry.getValue().entrySet()
+                    .stream()
+                    .filter(stringIntegerEntry -> countries.get(stringIntegerEntry.getKey()) != null
+                    && countries.get(stringIntegerEntry.getKey()).equals(region))
+                    .mapToInt(Map.Entry::getValue)
+                    .sum();
             stringMapEntry.getValue().put(region, sum);
             sum = 0;
         }
     }
 
     private void analyzeNewCasesForWorld(Data data, LinearRegression regression) {
-        Map<String, Integer> worldCases = getNewCasesOfCountry(data, "World");
+        Map<String, Integer> worldCases = getNewCasesOfCountry(data, WORLD);
         List<Double> betterLine = analyzeData(data, worldCases, regression);
 
         for (int i = 1; i <= DAYS; i++) {
             Map<String, List<Integer>> worldPrediction = new HashMap<>();
             List<Integer> list = new ArrayList<>();
             list.add((int) regression.getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
-            worldPrediction.put("World", list);
-            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
+            worldPrediction.put(WORLD, list);
+            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION, worldPrediction);
         }
     }
 
@@ -302,8 +306,8 @@ public class StatisticsImpl implements Statistics {
             Map<String, List<Integer>> worldPrediction = new HashMap<>();
             List<Integer> list = new ArrayList<>();
             list.add((int) regression.getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
-            worldPrediction.put("World", list);
-            data.getPredictionNewDeaths().put(LocalDate.now().plusDays(i - 1).format(formatter) + ".csv", worldPrediction);
+            worldPrediction.put(WORLD, list);
+            data.getPredictionNewDeaths().put(LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION, worldPrediction);
         }
     }
 
@@ -312,7 +316,7 @@ public class StatisticsImpl implements Statistics {
         List<Double> betterLine = analyzeData(data, countryCases, regression);
 
         for (int i = 1; i <= DAYS; i++) {
-            String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION;
             Map<String, List<Integer>> countryPrediction = data.getPredictionNewCases().entrySet()
                     .stream().filter(s -> s.getKey().equals(date))
                     .findFirst().map(Map.Entry::getValue).orElse(new HashMap<>());
@@ -329,7 +333,7 @@ public class StatisticsImpl implements Statistics {
         List<Double> betterLine = analyzeData(data, countryDeaths, regression);
 
         for (int i = 1; i <= DAYS; i++) {
-            String date = LocalDate.now().plusDays(i - 1).format(formatter) + ".csv";
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION;
             Map<String, List<Integer>> countryPrediction = data.getPredictionNewDeaths()
                     .entrySet().stream().filter(s -> s.getKey().equals(date))
                     .findFirst().map(Map.Entry::getValue).orElse(new HashMap<>());
@@ -441,9 +445,11 @@ public class StatisticsImpl implements Statistics {
     private void calculatePredictedConfirmedDeaths(Data data) {
         TreeMap<String, Map<String, Integer>> map = new TreeMap<>(data.dateComparator());
         TreeMap<String, Map<String, Integer>> result = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Map<String, List<Integer>>> prediction = new TreeMap<>(data.dateComparator());
         map.putAll(data.getDeaths());
+        prediction.putAll(data.getPredictionNewDeaths());
         Map<String, Integer> lastDayData = map.lastEntry().getValue();
-        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : data.getPredictionNewDeaths().entrySet()) {
+        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : prediction.entrySet()) {
             Map<String, Integer> predictedDate = new HashMap<>();
             for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
                 if (stringMapEntry.getValue().get(stringIntegerEntry.getKey()) != null) {

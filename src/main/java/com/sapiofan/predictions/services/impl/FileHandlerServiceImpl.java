@@ -28,6 +28,11 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     private static final Logger log = LoggerFactory.getLogger(FileHandlerServiceImpl.class);
 
+    private static final String CSV_EXTENSION = ".csv";
+    private static final String RESOURCES = "src/main/resources/";
+    private static final String PREDICTIONS_FOLDER = "templates/predictions/";
+    private static final String DATA_FOLDER = "data/";
+
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     private int DAYS = 181;
@@ -43,10 +48,9 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         String temp = urlString;
         String day = LocalDate.now().minusDays(1L).format(formatter);
 
-        Path folder = Paths.get("src/main/resources/data/");
+        Path folder = Paths.get(RESOURCES + DATA_FOLDER);
         File statisticsFolder = new File(folder.toString());
         List<String> fileNames = sortFilesByDate(statisticsFolder);
-        List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.listFiles())));
 
         LocalDate localDate1 = LocalDate.parse(fileNames.get(fileNames.size() - 1)
                 .substring(0, fileNames.get(fileNames.size() - 1).indexOf('.')), formatter);
@@ -57,10 +61,10 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
         for (int i = 0; i < count; i++) {
 
-            temp += day + ".csv";
+            temp += day + CSV_EXTENSION;
 
             try {
-                downloadFile(temp, folder + "/" + day + ".csv");
+                downloadFile(temp, folder + "/" + day + CSV_EXTENSION);
             } catch (IOException e) {
                 log.error("Error while downloading fileNames from github: " + e);
                 day = LocalDate.parse(day, formatter).minusDays(1L).format(formatter);
@@ -72,15 +76,16 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             temp = urlString;
         }
 
-        removeExtraFilesInStatistics(fileNames, files);
+        removeExtraFilesInStatistics(fileNames,
+                new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.listFiles()))));
     }
 
     @Override
     public void readData(Data data) {
-        File statisticsFolder = new File("src/main/resources/data/");
+        File statisticsFolder = new File(RESOURCES + DATA_FOLDER);
         File[] listOfFiles = statisticsFolder.listFiles();
         List<String> sortedListOfFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.list())));
-        sortedListOfFiles = sortedListOfFiles.stream().filter(f -> f.contains(".csv") &&
+        sortedListOfFiles = sortedListOfFiles.stream().filter(f -> f.contains(CSV_EXTENSION) &&
                 !utils.compareDateAndString(f, DAYS, formatter)).collect(Collectors.toList());
         sortedListOfFiles.sort(data.dateComparator());
         int counter = 0;
@@ -100,13 +105,6 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                     }
                     Map<String, Long> dayCases = data.getConfirmedCases().get(listOfFile.getName());
                     Map<String, Integer> dayDeaths = data.getDeaths().get(listOfFile.getName());
-                    try {
-                        String s = values[3];
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        log.error(values.length + "");
-                        log.error(listOfFile.getName());
-                        log.error(values[0] + " : " + values[1] + " : " + values[2]);
-                    }
                     if (dayCases != null && dayCases.get(values[3]) != null) {
                         dayCases.put(values[3], dayCases.get(values[3]) + Integer.parseInt(values[7]));
                         dayDeaths.put(values[3], dayDeaths.get(values[3]) + Integer.parseInt(values[8]));
@@ -135,7 +133,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
             executor.execute(() -> {
-                try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
+                try (CSVWriter writer = new CSVWriter(new FileWriter(RESOURCES + PREDICTIONS_FOLDER
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths"});
@@ -156,7 +154,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
         for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
             executor.execute(() -> {
-                try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/templates/predictions/"
+                try (CSVWriter writer = new CSVWriter(new FileWriter(RESOURCES + PREDICTIONS_FOLDER
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths",
@@ -189,7 +187,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
             });
         }
 
-        File forecastFolder = new File("src/main/resources/templates/predictions/");
+        File forecastFolder = new File(RESOURCES + PREDICTIONS_FOLDER);
 
         removeExtraFilesInStatistics(sortFilesByDate(forecastFolder),
                 new ArrayList<>(Arrays.asList(Objects.requireNonNull(forecastFolder.listFiles()))));
@@ -217,20 +215,22 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     }
 
     private void removeExtraFilesInStatistics(List<String> fileNames, List<File> files) {
-        LocalDate lastDayFromNow = LocalDate.now().minusDays(DAYS);
         fileNames.stream()
                 .filter(file ->
-                        LocalDate.parse(file.substring(0, file.indexOf('.')), formatter).isBefore(lastDayFromNow))
+                        LocalDate.parse(file.substring(0, file.indexOf('.')), formatter)
+                                .isBefore(LocalDate.now().minusDays(DAYS)))
                 .forEach(file -> files.get(files.indexOf(
                         files.stream()
                                 .filter(file1 -> file1.getName().equals(file))
-                                .findFirst().get())).delete());
+                                .findFirst()
+                                .get()))
+                        .delete());
     }
 
     @Override
     public List<String> countriesFromFile() {
         List<String> countries;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/countries.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(RESOURCES + "countries.txt"))) {
             countries = bufferedReader.lines().collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Error while getting countries list: " + e);
@@ -243,7 +243,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     @Override
     public Map<String, String> countriesByRegions() {
         Map<String, String> countries;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/regions.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(RESOURCES + "regions.txt"))) {
             countries = bufferedReader.lines()
                     .map(line -> line.split("#"))
                     .collect(Collectors.toMap(arr -> arr[0], arr -> arr[1], (a, b) -> b));

@@ -15,10 +15,12 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.IntStream;
 
 @Service
 public class FileReaderServiceImpl implements FileReaderService {
 
+    private static final String PREDICTIONS_FOLDER = "src/main/resources/templates/predictions";
     private final DateTimeFormatter initFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
     private final DateTimeFormatter endFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
@@ -28,8 +30,8 @@ public class FileReaderServiceImpl implements FileReaderService {
     public WorldData getWorldData() {
         WorldData worldData = new WorldData();
 
-        File statisticsFolder = new File("src/main/resources/templates/predictions");
-        File[] listOfFiles = statisticsFolder.listFiles();
+        File statisticsFolder = new File(PREDICTIONS_FOLDER);
+
         boolean header = true;
         List<String> names = new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.list())));
         names.remove(names.stream().filter(n -> n.contains("Read")).findFirst().get());
@@ -44,11 +46,11 @@ public class FileReaderServiceImpl implements FileReaderService {
 
             return -1;
         });
-        String lastDay = names.get(0);
-        LocalDate today = LocalDate.now();
 
-        for (File listOfFile : listOfFiles) {
-            if (listOfFile.getName().contains("Read") || listOfFile.getName().equals(lastDay)) {
+        boolean flag = false;
+
+        for (File listOfFile : statisticsFolder.listFiles()) {
+            if (listOfFile.getName().contains("Read") || listOfFile.getName().equals(names.get(0))) {
                 continue;
             }
             try (CSVReader csvReader = new CSVReader(new FileReader(listOfFile))) {
@@ -75,7 +77,18 @@ public class FileReaderServiceImpl implements FileReaderService {
                         deaths.add(Integer.parseInt(values[2]));
                         cCases.add(Integer.parseInt(values[3]));
                         cDeaths.add(Integer.parseInt(values[4]));
-                        if(values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
+                        if (values.length > 5 && !(values[5] == null || values[5].isEmpty())) {
+                            if (!flag) {
+                                flag = true;
+                                worldData.getWorldCases()
+                                        .get(LocalDate.parse(date, endFormatter).minusDays(1).format(endFormatter))
+                                        .forEach((key, value) -> IntStream.range(0, 2)
+                                        .forEach(i -> value.add(value.get(0))));
+                                worldData.getWorldDeaths()
+                                        .get(LocalDate.parse(date, endFormatter).minusDays(1).format(endFormatter))
+                                        .forEach((key, value) -> IntStream.range(0, 2)
+                                        .forEach(i -> value.add(value.get(0))));
+                            }
                             cases.add(Integer.parseInt(values[5]));
                             cases.add(Integer.parseInt(values[6]));
                             deaths.add(Integer.parseInt(values[7]));
@@ -105,8 +118,10 @@ public class FileReaderServiceImpl implements FileReaderService {
     public CountryData getCountryData(String country) {
         CountryData countryData = new CountryData(country);
 
-        File statisticsFolder = new File("src/main/resources/templates/predictions");
+        File statisticsFolder = new File(PREDICTIONS_FOLDER);
         File[] listOfFiles = statisticsFolder.listFiles();
+
+        boolean flag = false;
 
         for (File listOfFile : listOfFiles) {
             if (listOfFile.getName().contains("Read")) {
@@ -126,7 +141,16 @@ public class FileReaderServiceImpl implements FileReaderService {
                         deaths.add(Integer.parseInt(values[2]));
                         cCases.add(Integer.parseInt(values[3]));
                         cDeaths.add(Integer.parseInt(values[4]));
-                        if(values.length > 5) {
+                        if (values.length > 5) {
+                            if (!flag) {
+                                flag = true;
+                                List<Integer> lastExistedCases = countryData.getCountryCases()
+                                        .get(LocalDate.parse(date, endFormatter).minusDays(1).format(endFormatter));
+                                IntStream.range(0, 2).forEach(i -> lastExistedCases.add(lastExistedCases.get(0)));
+                                List<Integer> lastExistedDeaths = countryData.getCountryDeaths()
+                                        .get(LocalDate.parse(date, endFormatter).minusDays(1).format(endFormatter));
+                                IntStream.range(0, 2).forEach(i -> lastExistedDeaths.add(lastExistedDeaths.get(0)));
+                            }
                             cases.add(Integer.parseInt(values[5]));
                             cases.add(Integer.parseInt(values[6]));
                             deaths.add(Integer.parseInt(values[7]));
@@ -151,11 +175,10 @@ public class FileReaderServiceImpl implements FileReaderService {
     public AllCountries getAllCountries() {
         AllCountries allCountries = new AllCountries();
 
-        File statisticsFolder = new File("src/main/resources/templates/predictions");
-        File[] listOfFiles = statisticsFolder.listFiles();
+        File statisticsFolder = new File(PREDICTIONS_FOLDER);
         boolean header = true;
 
-        for (File listOfFile : listOfFiles) {
+        for (File listOfFile : statisticsFolder.listFiles()) {
             if (listOfFile.getName().contains("Read")) {
                 continue;
             }

@@ -47,7 +47,7 @@ public class AllCountries {
     }
 
     public Map<String, Long> getDayCases(String date) {
-        if(date == null) {
+        if (date == null) {
             date = LocalDate.now().format(formatter);
         }
         String finalDate = date;
@@ -60,7 +60,7 @@ public class AllCountries {
     }
 
     public Map<String, Integer> getDayNewCases(String date) {
-        if(date == null) {
+        if (date == null) {
             date = LocalDate.now().format(formatter);
         }
         String finalDate = date;
@@ -73,7 +73,7 @@ public class AllCountries {
     }
 
     public Map<String, Integer> getDayDeaths(String date) {
-        if(date == null) {
+        if (date == null) {
             date = LocalDate.now().format(formatter);
         }
         String finalDate = date;
@@ -86,7 +86,7 @@ public class AllCountries {
     }
 
     public Map<String, Integer> getDayNewDeaths(String date) {
-        if(date == null) {
+        if (date == null) {
             date = LocalDate.now().format(formatter);
         }
         String finalDate = date;
