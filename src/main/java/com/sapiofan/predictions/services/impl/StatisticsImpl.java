@@ -56,7 +56,6 @@ public class StatisticsImpl implements Statistics {
                 for (String area : areas) {
                     executor.execute(() -> getCountryDataExponential(data, area));
                 }
-//                executor.execute(() -> getCountryDataExponential(data, "Brazil"));
                 executor.execute(() -> getCountryDataExponential(data, WORLD));
 
                 while (true) {

@@ -131,6 +131,16 @@ public class ExponentialSmoothing {
         List<Double> trend = new ArrayList<>();
         double alpha = ALPHA, betta = BETTA, gamma = GAMMA;
 
+        if (alpha > 0.99) {
+            alpha = 0.99;
+        }
+        if (betta > 0.99) {
+            betta = 0.99;
+        }
+        if (gamma > 0.99) {
+            gamma = 0.99;
+        }
+
         // initial level
         level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD))
                 / seasonalCopy.get(0), 5));
@@ -152,8 +162,12 @@ public class ExponentialSmoothing {
                 seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i))
                         / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
             }
-            if (seasonalCopy.get(seasonalCopy.size() - 1) < MIN_SEASONAL) {
-                seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
+            if (Math.abs(seasonalCopy.get(seasonalCopy.size() - 1)) < MIN_SEASONAL) {
+                if (seasonalCopy.get(seasonalCopy.size() - 1) < 0) {
+                    seasonalCopy.set(seasonalCopy.size() - 1, -MIN_SEASONAL);
+                } else {
+                    seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
+                }
             }
             level.add(Precision.round((alpha * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1)
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
@@ -196,6 +210,16 @@ public class ExponentialSmoothing {
         List<Double> trend = new ArrayList<>();
         double alpha = constants.get(0), betta = constants.get(1), gamma = constants.get(2);
 
+        if (alpha > 0.99) {
+            alpha = 0.99;
+        }
+        if (betta > 0.99) {
+            betta = 0.99;
+        }
+        if (gamma > 0.99) {
+            gamma = 0.99;
+        }
+
         // initial level
         level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD))
                 / seasonalCopy.get(0), 5));
@@ -220,8 +244,12 @@ public class ExponentialSmoothing {
                 seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i))
                         / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
             }
-            if (seasonalCopy.get(seasonalCopy.size() - 1) < MIN_SEASONAL) {
-                seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
+            if (Math.abs(seasonalCopy.get(seasonalCopy.size() - 1)) < MIN_SEASONAL) {
+                if (seasonalCopy.get(seasonalCopy.size() - 1) < 0) {
+                    seasonalCopy.set(seasonalCopy.size() - 1, -MIN_SEASONAL);
+                } else {
+                    seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
+                }
             }
             level.add(Precision.round((alpha * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1)
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
@@ -327,11 +355,11 @@ public class ExponentialSmoothing {
         }
 
         double sum = withoutSeasonalPeriod.entrySet().stream().mapToDouble(stringIntegerEntry -> Math.abs((stringIntegerEntry.getValue() - predictions.entrySet()
-                .stream()
-                .filter(integerEntry -> integerEntry.getKey().equals(stringIntegerEntry.getKey()))
-                .findFirst()
-                .map(Map.Entry::getValue)
-                .orElse(0))))
+                        .stream()
+                        .filter(integerEntry -> integerEntry.getKey().equals(stringIntegerEntry.getKey()))
+                        .findFirst()
+                        .map(Map.Entry::getValue)
+                        .orElse(0))))
                 .sum();
 
         return sum / predictions.size();
