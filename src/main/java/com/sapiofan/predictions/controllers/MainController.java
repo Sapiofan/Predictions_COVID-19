@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -155,6 +157,13 @@ public class MainController {
         }
 
         return list;
+    }
+
+    @GetMapping("/csv/{country}")
+    public void exportIntoCSV(HttpServletResponse response, @PathVariable("country") String country) throws IOException {
+        response.setContentType("text/csv");
+        response.addHeader("Content-Disposition", "attachment; filename=\"" + country + ".csv\"");
+        fileReaderService.writeCasesToCsv(fileReaderService.getCountryData(country), country, response.getWriter());
     }
 
     @GetMapping("/about")

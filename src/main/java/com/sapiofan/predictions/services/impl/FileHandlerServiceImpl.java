@@ -220,10 +220,10 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                         LocalDate.parse(file.substring(0, file.indexOf('.')), formatter)
                                 .isBefore(LocalDate.now().minusDays(DAYS)))
                 .forEach(file -> files.get(files.indexOf(
-                        files.stream()
-                                .filter(file1 -> file1.getName().equals(file))
-                                .findFirst()
-                                .get()))
+                                files.stream()
+                                        .filter(file1 -> file1.getName().equals(file))
+                                        .findFirst()
+                                        .get()))
                         .delete());
     }
 

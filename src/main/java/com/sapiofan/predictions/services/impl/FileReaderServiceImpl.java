@@ -3,8 +3,11 @@ package com.sapiofan.predictions.services.impl;
 import com.opencsv.CSVReader;
 import com.sapiofan.predictions.entities.AllCountries;
 import com.sapiofan.predictions.entities.CountryData;
+import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.entities.WorldData;
 import com.sapiofan.predictions.services.FileReaderService;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -215,5 +219,23 @@ public class FileReaderServiceImpl implements FileReaderService {
         }
 
         return allCountries;
+    }
+
+    @Override
+    public void writeCasesToCsv(CountryData data, String country, Writer writer) {
+        try {
+            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);
+            TreeMap<String, List<Integer>> map = new TreeMap<>(data.dateComparator());
+            map.putAll(data.getCountryCases());
+            printer.printRecord("Date", "New cases", "Confirmed cases", "New deaths", "Confirmed deaths");
+            for (Map.Entry<String, List<Integer>> stringMapEntry : map.entrySet()) {
+                printer.printRecord(stringMapEntry.getKey(), stringMapEntry.getValue().get(0),
+                        data.getCountryConfirmedCases().get(stringMapEntry.getKey()).get(0),
+                        data.getCountryDeaths().get(stringMapEntry.getKey()).get(0),
+                        data.getCountryConfirmedDeaths().get(stringMapEntry.getKey()).get(0));
+            }
+        } catch (IOException e) {
+            log.error("Can't write data to csv for downloading by user: " + e);
+        }
     }
 }

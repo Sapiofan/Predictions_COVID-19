@@ -36,7 +36,8 @@
                 deaths</span>.
             For the next <span th:text="${predictionDays}"></span> days have been predicted approximately
             <span class="orange"><span th:text="${predictedCases}"></span> new cases</span>
-            and <span class="red"><span th:text="${predictedDeaths}"></span> new deaths</span>.</p>
+            and <span class="red"><span th:text="${predictedDeaths}"></span> new deaths</span>
+            (<a th:href="@{/csv/{country}(country=${country})}">download data</a>).</p>
     </section>
     <section id="charts">
         <div class="flex-wrapper">
