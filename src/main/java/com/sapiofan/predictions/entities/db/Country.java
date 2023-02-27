@@ -43,7 +43,7 @@ public class Country {
     public Country(String country, Integer new_cases, Integer new_deaths,
                    Integer confirmed_cases, Integer confirmed_deaths,
                    Integer low_bound_cases, Integer high_bound_cases,
-                   Integer low_bound_deaths, Integer high_bound_deaths) {
+                   Integer low_bound_deaths, Integer high_bound_deaths, CovidDate date) {
         this.country = country;
         this.new_cases = new_cases;
         this.new_deaths = new_deaths;
@@ -53,6 +53,7 @@ public class Country {
         this.high_bound_cases = high_bound_cases;
         this.low_bound_deaths = low_bound_deaths;
         this.high_bound_deaths = high_bound_deaths;
+        this.date = date;
     }
 
     public Long getId() {

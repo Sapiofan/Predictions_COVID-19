@@ -12,7 +12,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "dates")
 @NoArgsConstructor
-public class CovidDate {
+public class CovidDate implements Comparable<CovidDate>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,11 +21,14 @@ public class CovidDate {
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate date;
 
+    private Boolean isPredictionDate;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "date")
     private List<Country> countries = new ArrayList<>();
 
-    public CovidDate(LocalDate date) {
+    public CovidDate(LocalDate date, Boolean isPredictionDate) {
         this.date = date;
+        this.isPredictionDate = isPredictionDate;
     }
 
     public Long getId() {
@@ -42,6 +45,14 @@ public class CovidDate {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public Boolean getPredictionDate() {
+        return isPredictionDate;
+    }
+
+    public void setPredictionDate(Boolean predictionDate) {
+        isPredictionDate = predictionDate;
     }
 
     public List<Country> getCountries() {
@@ -67,5 +78,13 @@ public class CovidDate {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public int compareTo(CovidDate o) {
+        if(o == null) {
+            return 0;
+        }
+        return date.compareTo(o.date);
     }
 }
