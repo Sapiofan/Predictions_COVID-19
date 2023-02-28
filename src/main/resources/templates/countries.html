@@ -12,8 +12,13 @@
     <meta property="og:type" content="website"/>
     <link rel="icon" th:href="@{/img/virus.png}">
 
-    <link th:href="@{/css/general.css}" rel="stylesheet" />
-    <link th:href="@{/css/countries.css}" rel="stylesheet" />
+    <link th:href="@{/css/general.css}" rel="stylesheet"/>
+    <link th:href="@{/css/countries.css}" rel="stylesheet"/>
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=IM+Fell+Great+Primer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -29,7 +34,8 @@
                     <select>
                         <div th:each="map : ${dates}">
                             <option th:name="${map.key}" th:if="${map.key != yesterday}" th:text="${map.key}"></option>
-                            <option th:name="${map.key}" th:unless="${map.key != yesterday}" th:text="${map.key}" selected></option>
+                            <option th:name="${map.key}" th:unless="${map.key != yesterday}" th:text="${map.key}"
+                                    selected></option>
                         </div>
                     </select>
                 </div>
@@ -49,24 +55,12 @@
                 <th class="red">Deaths, total <img class="sort-ic" src="/img/sort-sign.png"></th>
                 <th class="red">New deaths <img class="sort-ic" src="/img/sort-sign.png"></th>
             </tr>
-<!--            <tr class="global stats-row">-->
-<!--                <td class="stats-title">Global</td>-->
-<!--                <td>1004</td>-->
-<!--                <td>945</td>-->
-<!--                <td>294</td>-->
-<!--                <td>522</td>-->
-<!--            </tr>-->
-                <tr th:each="map : ${cases}" class="country stats-row">
-                    <td class="stats-title"><a th:href="@{/{country}(country=${map.key})}" th:text="${map.key}"></a></td>
-                    <div th:each="case : ${map.value}">
-                        <td th:text="${case}"></td>
-                    </div>
-
-<!--                    <td th:text="${confirmedCases.get(map.key)}"></td>-->
-<!--                    <td th:text="${map.value}"></td>-->
-<!--                    <td th:text="${confirmedDeaths.get(map.key)}"></td>-->
-<!--                    <td th:text="${newDeaths.get(map.key)}"></td>-->
-                </tr>
+            <tr th:each="map : ${cases}" class="country stats-row">
+                <td class="stats-title"><a th:href="@{/{country}(country=${map.key})}" th:text="${map.key}"></a></td>
+                <div th:each="case : ${map.value}">
+                    <td th:text="${case}"></td>
+                </div>
+            </tr>
         </table>
     </section>
 </article>
@@ -82,13 +76,11 @@
                 function (response) {
                     $("#table-countries").remove();
                     htmlTable = `<table id="table-countries" cellpadding="0" cellspacing="0" class="heat-map table">`;
-                    htmlTable += `<tr>
-                                    <th class="blue">Country</th>
-                                    <th class="orange">Cases, total</th>
-                                    <th class="orange">New cases</th>
-                                    <th class="red">Deaths, total</th>
-                                    <th class="red">New deaths</th>
-                                </tr>`
+                    htmlTable += `<th class="blue">Country <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="orange">Cases, total <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="orange">New cases <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="red">Deaths, total <img class="sort-ic" src="/img/sort-sign.png"></th>
+                <th class="red">New deaths <img class="sort-ic" src="/img/sort-sign.png"></th>`
                     var data = ``;
                     var obj = $.parseJSON(response.responseText);
                     number = obj.length;
@@ -96,11 +88,11 @@
                     for (const [key, value] of Object.entries(obj)) {
                         c += 1;
                         data += `<tr class="country stats-row">
-                    <td class="stats-title"><a href="/`+key+`">`+key+`</a></td>
-                    <td>`+value[0]+`</td>
-                    <td>`+value[1]+`</td>
-                    <td>`+value[2]+`</td>
-                    <td>`+value[3]+`</td>
+                    <td class="stats-title"><a href="/` + key + `">` + key + `</a></td>
+                    <td>` + value[0] + `</td>
+                    <td>` + value[1] + `</td>
+                    <td>` + value[2] + `</td>
+                    <td>` + value[3] + `</td>
                 </tr>`
                     }
                     htmlTable += data + `<table>`;
@@ -110,6 +102,7 @@
             ]
         });
     }
+
     sorting();
 </script>
 </html>

@@ -1,6 +1,5 @@
 package com.sapiofan.predictions.services.impl;
 
-import com.sapiofan.predictions.controllers.MainController;
 import com.sapiofan.predictions.dao.CountryDao;
 import com.sapiofan.predictions.dao.DateDao;
 import com.sapiofan.predictions.entities.AllCountries;
@@ -18,7 +17,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 @Service
 public class DBHandlerService {
@@ -61,21 +59,15 @@ public class DBHandlerService {
                 } else {
                     covidDate1 = covidDate.get();
                 }
-                for (Map.Entry<String, Long> stringLongEntry : stringMapEntry.getValue().entrySet()) {
-//                    System.out.println(stringMapEntry.getKey());
-//                    TreeMap<String, Map<String, Integer>> map1 = new TreeMap<>(data.dateComparator());
-//                    map1.putAll(data.getNewCases());
-//                    for (Map.Entry<String, Map<String, Integer>> mapEntry : map1.entrySet()) {
-//                        System.out.println(mapEntry.getKey() + " : " + mapEntry.getValue());
-//                    }
-                    countries.add(new Country(stringLongEntry.getKey(), data.getNewCases().get(stringMapEntry.getKey())
-                            .get(stringLongEntry.getKey()),
-                            data.getNewDeaths().get(stringMapEntry.getKey()).get(stringLongEntry.getKey()),
-                            Math.toIntExact(data.getConfirmedCases().get(stringMapEntry.getKey()).get(stringLongEntry.getKey())),
-                            data.getDeaths().get(stringMapEntry.getKey()).get(stringLongEntry.getKey()),
-                            null, null, null, null,
-                            covidDate1));
-                }
+                stringMapEntry.getValue()
+                        .forEach((key, value) -> countries
+                                .add(new Country(key, data.getNewCases().get(stringMapEntry.getKey())
+                                        .get(key),
+                                        data.getNewDeaths().get(stringMapEntry.getKey()).get(key),
+                                        Math.toIntExact(data.getConfirmedCases().get(stringMapEntry.getKey()).get(key)),
+                                        data.getDeaths().get(stringMapEntry.getKey()).get(key),
+                                        null, null, null, null,
+                                        covidDate1)));
             }
             countryDao.saveAll(countries);
             return;
@@ -141,15 +133,14 @@ public class DBHandlerService {
                     covidDate1 = covidDate.get();
                 }
                 if (date.isBefore(localDate)) {
-                    for (Map.Entry<String, Long> stringLongEntry : stringMapEntry.getValue().entrySet()) {
-                        countries.add(new Country(stringLongEntry.getKey(), data.getNewCases().get(stringMapEntry.getKey())
-                                .get(stringLongEntry.getKey()),
-                                data.getNewDeaths().get(stringMapEntry.getKey()).get(stringLongEntry.getKey()),
-                                Math.toIntExact(data.getConfirmedCases().get(stringMapEntry.getKey()).get(stringLongEntry.getKey())),
-                                data.getDeaths().get(stringMapEntry.getKey()).get(stringLongEntry.getKey()),
-                                null, null, null, null,
-                                covidDate1));
-                    }
+                    stringMapEntry.getValue().forEach((key, value) -> countries
+                            .add(new Country(key, data.getNewCases().get(stringMapEntry.getKey())
+                                    .get(key),
+                                    data.getNewDeaths().get(stringMapEntry.getKey()).get(key),
+                                    Math.toIntExact(data.getConfirmedCases().get(stringMapEntry.getKey()).get(key)),
+                                    data.getDeaths().get(stringMapEntry.getKey()).get(key),
+                                    null, null, null, null,
+                                    covidDate1)));
                 }
             }
             countryDao.saveAll(countries);
@@ -195,10 +186,6 @@ public class DBHandlerService {
         for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : map.entrySet()) {
             LocalDate predDate = LocalDate.parse(stringMapEntry.getKey()
                     .substring(0, stringMapEntry.getKey().indexOf(".")), formatter);
-//            CovidDate covidDate = dateDao.findCovidDateByDate(predDate);
-//            if(covidDate == null) {
-//                covidDate = dateDao.save(new CovidDate(predDate, true));
-//            }
             Optional<CovidDate> covidDate = dates.stream()
                     .filter(covidDate1 -> covidDate1.getDate().equals(predDate)).findFirst();
             CovidDate covidDate1;
@@ -209,16 +196,14 @@ public class DBHandlerService {
             }
             if (dates.get(dates.size() - 1).getDate().isBefore(predDate)) {
                 Map<String, List<Integer>> predDeaths = data.getPredictionNewDeaths().get(stringMapEntry.getKey());
-                for (Map.Entry<String, List<Integer>> stringListEntry : stringMapEntry.getValue().entrySet()) {
-                    countries.add(new Country(stringListEntry.getKey(), stringListEntry.getValue().get(0),
-                            predDeaths.get(stringListEntry.getKey()).get(0),
-                            Math.toIntExact(data.getPredictionConfirmedCases().get(stringMapEntry.getKey())
-                                    .get(stringListEntry.getKey())),
-                            data.getPredictionConfirmedDeaths().get(stringMapEntry.getKey()).get(stringListEntry.getKey()),
-                            stringListEntry.getValue().get(1), stringListEntry.getValue().get(2),
-                            predDeaths.get(stringListEntry.getKey()).get(1), predDeaths.get(stringListEntry.getKey()).get(2),
-                            covidDate1));
-                }
+                stringMapEntry.getValue().forEach((key, value) -> countries.add(new Country(key, value.get(0),
+                        predDeaths.get(key).get(0),
+                        Math.toIntExact(data.getPredictionConfirmedCases().get(stringMapEntry.getKey())
+                                .get(key)),
+                        data.getPredictionConfirmedDeaths().get(stringMapEntry.getKey()).get(key),
+                        value.get(1), value.get(2),
+                        predDeaths.get(key).get(1), predDeaths.get(key).get(2),
+                        covidDate1)));
             }
         }
         countryDao.saveAll(countries);
@@ -298,9 +283,7 @@ public class DBHandlerService {
 
     public AllCountries allCountries() {
         AllCountries allCountries = new AllCountries();
-        log.warn("Start");
         List<Country> countries = countryDao.findAll();
-        log.warn("End");
         List<CovidDate> dates = dateDao.findAll();
         for (CovidDate date : dates) {
             allCountries.getNewCases().put(date.getDate().format(dbFormatter), new HashMap<>());
@@ -318,46 +301,6 @@ public class DBHandlerService {
         }
         Thread endChunk = new Thread(() -> parallelReading(allCountries, countries.subList(chunk * 11, countries.size())));
         endChunk.start();
-//        for (int i = 0; i < countries.size(); i++) {
-//            Country country = countries.get(i);
-//            if (!country.getCountry().equals("World") && !country.getCountry().equals("Europe") &&
-//                    !country.getCountry().equals("Asia") && !country.getCountry().equals("Americas") &&
-//                    !country.getCountry().equals("Oceania") && !country.getCountry().equals("Africa")) {
-//                Map<String, Integer> newCases = allCountries.getNewCases().get(country.getDate().getDate().format(dbFormatter));
-//                Map<String, Integer> newDeaths = allCountries.getNewDeaths().get(country.getDate().getDate().format(dbFormatter));
-//                Map<String, Long> confirmedCases = allCountries.getConfirmedCases().get(country.getDate().getDate().format(dbFormatter));
-//                Map<String, Integer> confirmedDeaths = allCountries.getConfirmedDeaths().get(country.getDate().getDate().format(dbFormatter));
-//                if (newCases == null) {
-//                    Map<String, Integer> map = new HashMap<>();
-//                    map.put(country.getCountry(), country.getNew_cases());
-//                    allCountries.getNewCases().put(country.getDate().getDate().format(dbFormatter), map);
-//                } else {
-//                    newCases.put(country.getCountry(), country.getNew_cases());
-//                }
-//                if (newDeaths == null) {
-//                    Map<String, Integer> map = new HashMap<>();
-//                    map.put(country.getCountry(), country.getNew_deaths());
-//                    allCountries.getNewDeaths().put(country.getDate().getDate().format(dbFormatter), map);
-//                } else {
-//                    newDeaths.put(country.getCountry(), country.getNew_cases());
-//                }
-//                if (confirmedCases == null) {
-//                    Map<String, Long> map = new HashMap<>();
-//                    map.put(country.getCountry(), Long.valueOf(country.getConfirmed_cases()));
-//                    allCountries.getConfirmedCases().put(country.getDate().getDate().format(dbFormatter), map);
-//                } else {
-//                    confirmedCases.put(country.getCountry(), Long.valueOf(country.getConfirmed_cases()));
-//                }
-//                if (confirmedDeaths == null) {
-//                    Map<String, Integer> map = new HashMap<>();
-//                    map.put(country.getCountry(), country.getConfirmed_deaths());
-//                    allCountries.getConfirmedDeaths().put(country.getDate().getDate().format(dbFormatter), map);
-//                } else {
-//                    confirmedDeaths.put(country.getCountry(), country.getNew_cases());
-//                }
-//            }
-//        }
-        log.warn("Second End");
         return allCountries;
     }
 

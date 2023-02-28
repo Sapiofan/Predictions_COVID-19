@@ -15,20 +15,16 @@
     <link th:href="@{/css/general.css}" rel="stylesheet" />
     <link th:href="@{/css/about.css}" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=IM+Fell+Great+Primer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+
     <title>About</title>
 
 </head>
 <body>
-<header>
-    <div class="logo">
-        <img src="/img/logo.png" class="logo-image">
-    </div>
-    <nav>
-        <a href="/">World data</a>
-        <a href="/countries">Countries data</a>
-        <a href="/about">About</a>
-    </nav>
-</header>
+<div th:insert="header :: header"></div>
 <article>
     <h1>About</h1>
     <section id="site-description">
@@ -63,14 +59,6 @@
                 <li>Country (the same types of data possible to observe but for a certain country)</li>
                 <li>About (useful information, cautions, sources)</li>
             </ol>
-<!--                1. Home page <br>-->
-<!--                - World statistic (new cases, deaths, confirmed cases and deaths, statistic by day and week) <br>-->
-<!--                - Region situation (the same possible to see like in the world statistic, but for 5 regions) <br>-->
-<!--                2. Countries (all countries are in a table, it's possible to sort it by columns, find needed country,-->
-<!--                observe statistic by different dates, go to country statistic) <br>-->
-<!--                3. Country (the same types of data possible to observe but for a certain country) <br>-->
-<!--                4. About (useful information, cautions, sources) <br>-->
-
             <span class="bold">Updating of data:</span> <br>
             <p>
                 All data are updated once a day. It pertains loading of existed data as well as calculating new predictions.

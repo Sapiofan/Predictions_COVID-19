@@ -4,6 +4,7 @@
 
 html {
     scroll-behavior: smooth;
+    font-family: 'Inter', sans-serif;
 }
 
 button:hover, input[type="button"]:hover {
@@ -26,7 +27,7 @@ header {
 .logo {
     width: 200px;
     height: 80px;
-    margin: 20px 0px 20px 80px;
+    margin: 10px 0px 10px 80px;
 }
 
 .logo img {
@@ -41,7 +42,8 @@ nav {
 
 nav a{
     color: white;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-family: IM Fell Great Primer;
+    font-weight: 500;
     margin: 0 30px;
     font-size: 26px;
     text-decoration: none;
