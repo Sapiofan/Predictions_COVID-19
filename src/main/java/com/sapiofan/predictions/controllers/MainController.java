@@ -2,6 +2,7 @@ package com.sapiofan.predictions.controllers;
 
 import com.sapiofan.predictions.entities.*;
 import com.sapiofan.predictions.services.FileReaderService;
+import com.sapiofan.predictions.services.impl.DBHandlerService;
 import com.sapiofan.predictions.services.impl.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,15 @@ public class MainController {
     private FileReaderService fileReaderService;
 
     @Autowired
+    private DBHandlerService dbHandlerService;
+
+    @Autowired
     private Utils utils;
 
     @GetMapping("/")
     public String home(Model model) {
-        WorldData worldData = fileReaderService.getWorldData();
+//        WorldData worldData = fileReaderService.getWorldData();
+        WorldData worldData = dbHandlerService.worldData(180);
         WorldDataHandler worldDataHandler = new WorldDataHandler(worldData);
         TreeMap<String, Map<String, List<Integer>>> worldCases = worldData.getWorldCases();
         TreeMap<String, Map<String, List<Integer>>> worldDeaths = worldData.getWorldDeaths();

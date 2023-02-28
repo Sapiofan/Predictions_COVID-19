@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "countries")
 @NoArgsConstructor
-public class Country {
+public class Country implements Comparable<Country>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -143,5 +143,13 @@ public class Country {
     public void setDate(CovidDate date) {
         this.date = date;
         this.date.addCountry(this);
+    }
+
+    @Override
+    public int compareTo(Country o) {
+        if(o == null || o.date == null) {
+            return 0;
+        }
+        return this.date.getDate().compareTo(o.getDate().getDate());
     }
 }

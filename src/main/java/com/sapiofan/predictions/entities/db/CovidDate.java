@@ -17,7 +17,7 @@ public class CovidDate implements Comparable<CovidDate>{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate date;
 

@@ -36,6 +36,9 @@ public class StatisticsImpl implements Statistics {
     private FileHandlerService fileHandlerService;
 
     @Autowired
+    private DBHandlerService dbHandlerService;
+
+    @Autowired
     private Utils utils;
 
     @EventListener(ApplicationReadyEvent.class)
@@ -44,56 +47,59 @@ public class StatisticsImpl implements Statistics {
             @Override
             public void run() {
                 Data data = getWorldData();
-                TreeMap<String, Integer> map = new TreeMap<>(data.dateComparator());
-                for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
-                    for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
-                        if(stringIntegerEntry.getKey().equals("Italy")) {
-                            map.put(stringMapEntry.getKey(), stringIntegerEntry.getValue());
-                        }
-                    }
-                }
-                TreeMap<String, Integer> map2 = new TreeMap<>(data.dateComparator());
-                int counter = 0;
-                for (Map.Entry<String, Integer> stringIntegerEntry : map.entrySet()) {
-                    if(counter > map.size() - 30) {
-                        map2.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
-                    }
-                    counter++;
-                }
-                GompertzGrowth gompertzGrowth = new GompertzGrowth(map2, data);
-                gompertzGrowth.predictionCases();
-//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-//
-//                log.warn("Started calculating exponential smooth");
-//                Date start = new Date();
-//
-//                for (String country : utils.getCountries()) {
-//                    executor.execute(() -> getCountryDataExponential(data, country));
-//                }
-//
-//                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
-//                for (String area : areas) {
-//                    executor.execute(() -> getCountryDataExponential(data, area));
-//                }
-//                executor.execute(() -> getCountryDataExponential(data, WORLD));
-//
-//                while (true) {
-//                    if (executor.getActiveCount() == 0) {
-//                        handlePredictedCases(data);
-//                        Date end = new Date();
-//                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
-//                        log.warn("Start writing to csv");
-//                        fileHandlerService.writeToCSV(data);
-//                        log.warn("End writing to csv");
-//                        break;
-//                    } else {
-//                        try {
-//                            Thread.sleep(3000);
-//                        } catch (InterruptedException e) {
-//                            log.error("Can't sleep timer: " + e);
+                dbHandlerService.updateExistedData(data);
+//                TreeMap<String, Integer> map = new TreeMap<>(data.dateComparator());
+//                for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
+//                    for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+//                        if(stringIntegerEntry.getKey().equals("Italy")) {
+//                            map.put(stringMapEntry.getKey(), stringIntegerEntry.getValue());
 //                        }
 //                    }
 //                }
+//                TreeMap<String, Integer> map2 = new TreeMap<>(data.dateComparator());
+//                int counter = 0;
+//                for (Map.Entry<String, Integer> stringIntegerEntry : map.entrySet()) {
+//                    if(counter > map.size() - 30) {
+//                        map2.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
+//                    }
+//                    counter++;
+//                }
+//                GompertzGrowth gompertzGrowth = new GompertzGrowth(map2, data);
+//                gompertzGrowth.predictionCases();
+
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+
+                log.warn("Started calculating exponential smooth");
+                Date start = new Date();
+
+                for (String country : utils.getCountries()) {
+                    executor.execute(() -> getCountryDataExponential(data, country));
+                }
+
+                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+                for (String area : areas) {
+                    executor.execute(() -> getCountryDataExponential(data, area));
+                }
+                executor.execute(() -> getCountryDataExponential(data, WORLD));
+
+                while (true) {
+                    if (executor.getActiveCount() == 0) {
+                        handlePredictedCases(data);
+                        Date end = new Date();
+                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
+                        log.warn("Start writing to csv");
+//                        fileHandlerService.writeToCSV(data);
+                        dbHandlerService.updatePredictedData(data);
+                        log.warn("End writing to csv");
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            log.error("Can't sleep timer: " + e);
+                        }
+                    }
+                }
 //                getCountryDataLinear(data);
             }
         }, 0, 86400000);
@@ -102,7 +108,7 @@ public class StatisticsImpl implements Statistics {
     @Override
     public Data getWorldData() {
         log.warn("Started downloading of csv files from the site");
-//        fileHandlerService.downloadFilesWithData(DAYS);
+        fileHandlerService.downloadFilesWithData(DAYS);
         log.warn("Ended downloading of csv files from the site");
         Data data = new Data();
         fileHandlerService.readData(data);
