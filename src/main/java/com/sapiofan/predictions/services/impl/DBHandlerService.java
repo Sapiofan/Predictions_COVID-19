@@ -1,18 +1,23 @@
 package com.sapiofan.predictions.services.impl;
 
+import com.sapiofan.predictions.controllers.MainController;
 import com.sapiofan.predictions.dao.CountryDao;
 import com.sapiofan.predictions.dao.DateDao;
+import com.sapiofan.predictions.entities.AllCountries;
 import com.sapiofan.predictions.entities.CountryData;
 import com.sapiofan.predictions.entities.Data;
 import com.sapiofan.predictions.entities.WorldData;
 import com.sapiofan.predictions.entities.db.Country;
 import com.sapiofan.predictions.entities.db.CovidDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +26,10 @@ public class DBHandlerService {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     private final DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+    private static final Logger log = LoggerFactory.getLogger(DBHandlerService.class);
+
+    private ReentrantLock locker = new ReentrantLock();
 
     @Autowired
     private DateDao dateDao;
@@ -39,7 +48,7 @@ public class DBHandlerService {
             TreeMap<String, Map<String, Long>> map = new TreeMap<>(data.dateComparator());
             map.putAll(data.getConfirmedCases());
             for (Map.Entry<String, Map<String, Long>> stringMapEntry : map.entrySet()) {
-                if(map.firstKey().equals(stringMapEntry.getKey())) {
+                if (map.firstKey().equals(stringMapEntry.getKey())) {
                     continue;
                 }
                 LocalDate date = LocalDate.parse(stringMapEntry.getKey()
@@ -47,7 +56,7 @@ public class DBHandlerService {
                 Optional<CovidDate> covidDate = dates.stream()
                         .filter(covidDate1 -> covidDate1.getDate().equals(date)).findFirst();
                 CovidDate covidDate1;
-                if(covidDate.isEmpty()) {
+                if (covidDate.isEmpty()) {
                     covidDate1 = dateDao.save(new CovidDate(date, false));
                 } else {
                     covidDate1 = covidDate.get();
@@ -118,7 +127,7 @@ public class DBHandlerService {
             TreeMap<String, Map<String, Long>> map = new TreeMap<>(data.dateComparator());
             map.putAll(data.getConfirmedCases());
             for (Map.Entry<String, Map<String, Long>> stringMapEntry : map.entrySet()) {
-                if(map.firstKey().equals(stringMapEntry.getKey())) {
+                if (map.firstKey().equals(stringMapEntry.getKey())) {
                     continue;
                 }
                 LocalDate date = LocalDate.parse(stringMapEntry.getKey()
@@ -126,7 +135,7 @@ public class DBHandlerService {
                 Optional<CovidDate> covidDate = dates.stream()
                         .filter(covidDate1 -> covidDate1.getDate().equals(date)).findFirst();
                 CovidDate covidDate1;
-                if(covidDate.isEmpty()) {
+                if (covidDate.isEmpty()) {
                     covidDate1 = dateDao.save(new CovidDate(date, false));
                 } else {
                     covidDate1 = covidDate.get();
@@ -193,7 +202,7 @@ public class DBHandlerService {
             Optional<CovidDate> covidDate = dates.stream()
                     .filter(covidDate1 -> covidDate1.getDate().equals(predDate)).findFirst();
             CovidDate covidDate1;
-            if(covidDate.isEmpty()) {
+            if (covidDate.isEmpty()) {
                 covidDate1 = dateDao.save(new CovidDate(predDate, false));
             } else {
                 covidDate1 = covidDate.get();
@@ -235,7 +244,7 @@ public class DBHandlerService {
                 worldCases.put(region.getCountry(), new ArrayList<>(Arrays.asList(region.getNew_cases(), region.getLow_bound_cases(),
                         region.getHigh_bound_cases())));
             }
-            if(worldDeaths == null) {
+            if (worldDeaths == null) {
                 Map<String, List<Integer>> map = new HashMap<>();
                 map.put(region.getCountry(), new ArrayList<>(Arrays.asList(region.getNew_deaths(), region.getLow_bound_deaths(),
                         region.getHigh_bound_deaths())));
@@ -244,14 +253,14 @@ public class DBHandlerService {
                 worldDeaths.put(region.getCountry(), new ArrayList<>(Arrays.asList(region.getNew_cases(), region.getLow_bound_cases(),
                         region.getHigh_bound_cases())));
             }
-            if(worldConfirmedCases == null) {
+            if (worldConfirmedCases == null) {
                 Map<String, List<Integer>> map = new HashMap<>();
                 map.put(region.getCountry(), new ArrayList<>(List.of(region.getConfirmed_cases())));
                 data.getConfirmedCases().put(region.getDate().getDate().format(dbFormatter), map);
             } else {
                 worldConfirmedCases.put(region.getCountry(), new ArrayList<>(List.of(region.getConfirmed_cases())));
             }
-            if(worldConfirmedDeaths == null) {
+            if (worldConfirmedDeaths == null) {
                 Map<String, List<Integer>> map = new HashMap<>();
                 map.put(region.getCountry(), new ArrayList<>(List.of(region.getConfirmed_deaths())));
                 data.getConfirmedDeaths().put(region.getDate().getDate().format(dbFormatter), map);
@@ -285,5 +294,87 @@ public class DBHandlerService {
         data.setCountryConfirmedDeaths(confirmedDeaths);
 
         return data;
+    }
+
+    public AllCountries allCountries() {
+        AllCountries allCountries = new AllCountries();
+        log.warn("Start");
+        List<Country> countries = countryDao.findAll();
+        log.warn("End");
+        List<CovidDate> dates = dateDao.findAll();
+        for (CovidDate date : dates) {
+            allCountries.getNewCases().put(date.getDate().format(dbFormatter), new HashMap<>());
+            allCountries.getNewDeaths().put(date.getDate().format(dbFormatter), new HashMap<>());
+            allCountries.getConfirmedCases().put(date.getDate().format(dbFormatter), new HashMap<>());
+            allCountries.getConfirmedDeaths().put(date.getDate().format(dbFormatter), new HashMap<>());
+        }
+        final int chunk = countries.size() / 12;
+        Thread startChunk = new Thread(() -> parallelReading(allCountries, countries.subList(0, chunk)));
+        startChunk.start();
+        for (int i = 2; i < 12; i++) {
+            int finalI = i;
+            Thread midChunk = new Thread(() -> parallelReading(allCountries, countries.subList(chunk * (finalI - 1), chunk * finalI)));
+            midChunk.start();
+        }
+        Thread endChunk = new Thread(() -> parallelReading(allCountries, countries.subList(chunk * 11, countries.size())));
+        endChunk.start();
+//        for (int i = 0; i < countries.size(); i++) {
+//            Country country = countries.get(i);
+//            if (!country.getCountry().equals("World") && !country.getCountry().equals("Europe") &&
+//                    !country.getCountry().equals("Asia") && !country.getCountry().equals("Americas") &&
+//                    !country.getCountry().equals("Oceania") && !country.getCountry().equals("Africa")) {
+//                Map<String, Integer> newCases = allCountries.getNewCases().get(country.getDate().getDate().format(dbFormatter));
+//                Map<String, Integer> newDeaths = allCountries.getNewDeaths().get(country.getDate().getDate().format(dbFormatter));
+//                Map<String, Long> confirmedCases = allCountries.getConfirmedCases().get(country.getDate().getDate().format(dbFormatter));
+//                Map<String, Integer> confirmedDeaths = allCountries.getConfirmedDeaths().get(country.getDate().getDate().format(dbFormatter));
+//                if (newCases == null) {
+//                    Map<String, Integer> map = new HashMap<>();
+//                    map.put(country.getCountry(), country.getNew_cases());
+//                    allCountries.getNewCases().put(country.getDate().getDate().format(dbFormatter), map);
+//                } else {
+//                    newCases.put(country.getCountry(), country.getNew_cases());
+//                }
+//                if (newDeaths == null) {
+//                    Map<String, Integer> map = new HashMap<>();
+//                    map.put(country.getCountry(), country.getNew_deaths());
+//                    allCountries.getNewDeaths().put(country.getDate().getDate().format(dbFormatter), map);
+//                } else {
+//                    newDeaths.put(country.getCountry(), country.getNew_cases());
+//                }
+//                if (confirmedCases == null) {
+//                    Map<String, Long> map = new HashMap<>();
+//                    map.put(country.getCountry(), Long.valueOf(country.getConfirmed_cases()));
+//                    allCountries.getConfirmedCases().put(country.getDate().getDate().format(dbFormatter), map);
+//                } else {
+//                    confirmedCases.put(country.getCountry(), Long.valueOf(country.getConfirmed_cases()));
+//                }
+//                if (confirmedDeaths == null) {
+//                    Map<String, Integer> map = new HashMap<>();
+//                    map.put(country.getCountry(), country.getConfirmed_deaths());
+//                    allCountries.getConfirmedDeaths().put(country.getDate().getDate().format(dbFormatter), map);
+//                } else {
+//                    confirmedDeaths.put(country.getCountry(), country.getNew_cases());
+//                }
+//            }
+//        }
+        log.warn("Second End");
+        return allCountries;
+    }
+
+    private void parallelReading(AllCountries allCountries, List<Country> countries) {
+        for (Country country : countries) {
+            if (!country.getCountry().equals("World") && !country.getCountry().equals("Europe") &&
+                    !country.getCountry().equals("Asia") && !country.getCountry().equals("Americas") &&
+                    !country.getCountry().equals("Oceania") && !country.getCountry().equals("Africa")) {
+                allCountries.getNewCases().get(country.getDate().getDate().format(dbFormatter))
+                        .put(country.getCountry(), country.getNew_cases());
+                allCountries.getNewDeaths().get(country.getDate().getDate().format(dbFormatter))
+                        .put(country.getCountry(), country.getNew_cases());
+                allCountries.getConfirmedCases().get(country.getDate().getDate().format(dbFormatter))
+                        .put(country.getCountry(), Long.valueOf(country.getConfirmed_cases()));
+                allCountries.getConfirmedDeaths().get(country.getDate().getDate().format(dbFormatter))
+                        .put(country.getCountry(), country.getNew_cases());
+            }
+        }
     }
 }

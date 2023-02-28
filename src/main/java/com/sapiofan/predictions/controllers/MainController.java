@@ -39,8 +39,7 @@ public class MainController {
 
     @GetMapping("/")
     public String home(Model model) {
-//        WorldData worldData = fileReaderService.getWorldData();
-        WorldData worldData = dbHandlerService.worldData(180);
+        WorldData worldData = fileReaderService.getWorldData();
         WorldDataHandler worldDataHandler = new WorldDataHandler(worldData);
         TreeMap<String, Map<String, List<Integer>>> worldCases = worldData.getWorldCases();
         TreeMap<String, Map<String, List<Integer>>> worldDeaths = worldData.getWorldDeaths();

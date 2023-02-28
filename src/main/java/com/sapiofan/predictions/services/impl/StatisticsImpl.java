@@ -46,8 +46,9 @@ public class StatisticsImpl implements Statistics {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Data data = getWorldData();
-                dbHandlerService.updateExistedData(data);
+//                Data data = getWorldData();
+//                dbHandlerService.updateExistedData(data);
+                
 //                TreeMap<String, Integer> map = new TreeMap<>(data.dateComparator());
 //                for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getDeaths().entrySet()) {
 //                    for (Map.Entry<String, Integer> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
@@ -67,39 +68,39 @@ public class StatisticsImpl implements Statistics {
 //                GompertzGrowth gompertzGrowth = new GompertzGrowth(map2, data);
 //                gompertzGrowth.predictionCases();
 
-                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-
-                log.warn("Started calculating exponential smooth");
-                Date start = new Date();
-
-                for (String country : utils.getCountries()) {
-                    executor.execute(() -> getCountryDataExponential(data, country));
-                }
-
-                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
-                for (String area : areas) {
-                    executor.execute(() -> getCountryDataExponential(data, area));
-                }
-                executor.execute(() -> getCountryDataExponential(data, WORLD));
-
-                while (true) {
-                    if (executor.getActiveCount() == 0) {
-                        handlePredictedCases(data);
-                        Date end = new Date();
-                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
-                        log.warn("Start writing to csv");
-//                        fileHandlerService.writeToCSV(data);
-                        dbHandlerService.updatePredictedData(data);
-                        log.warn("End writing to csv");
-                        break;
-                    } else {
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException e) {
-                            log.error("Can't sleep timer: " + e);
-                        }
-                    }
-                }
+//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+//
+//                log.warn("Started calculating exponential smooth");
+//                Date start = new Date();
+//
+//                for (String country : utils.getCountries()) {
+//                    executor.execute(() -> getCountryDataExponential(data, country));
+//                }
+//
+//                Set<String> areas = new HashSet<>(utils.getCountriesByRegions().values());
+//                for (String area : areas) {
+//                    executor.execute(() -> getCountryDataExponential(data, area));
+//                }
+//                executor.execute(() -> getCountryDataExponential(data, WORLD));
+//
+//                while (true) {
+//                    if (executor.getActiveCount() == 0) {
+//                        handlePredictedCases(data);
+//                        Date end = new Date();
+//                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
+//                        log.warn("Start writing to csv");
+////                        fileHandlerService.writeToCSV(data);
+//                        dbHandlerService.updatePredictedData(data);
+//                        log.warn("End writing to csv");
+//                        break;
+//                    } else {
+//                        try {
+//                            Thread.sleep(3000);
+//                        } catch (InterruptedException e) {
+//                            log.error("Can't sleep timer: " + e);
+//                        }
+//                    }
+//                }
 //                getCountryDataLinear(data);
             }
         }, 0, 86400000);
