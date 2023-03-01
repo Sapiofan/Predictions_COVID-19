@@ -22,8 +22,16 @@ public class GompertzGrowth {
 
     public GompertzGrowth(TreeMap<String, Integer> confirmedCases, Data data) {
         this.confirmedCases = new TreeMap<>(data.dateComparator());
+        Map.Entry<String, Integer> entry = confirmedCases.firstEntry();
+        int init = entry.getValue() % 10_000;
         for (Map.Entry<String, Integer> stringIntegerEntry : confirmedCases.entrySet()) {
-            this.confirmedCases.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue() % 100_000);
+            if(stringIntegerEntry.equals(entry)) {
+                this.confirmedCases.put(stringIntegerEntry.getKey(), init);
+                continue;
+            }
+            init += (stringIntegerEntry.getValue() - entry.getValue());
+            this.confirmedCases.put(stringIntegerEntry.getKey(), init);
+            entry = stringIntegerEntry;
         }
     }
 
