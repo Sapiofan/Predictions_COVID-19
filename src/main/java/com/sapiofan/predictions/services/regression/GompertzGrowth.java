@@ -25,7 +25,7 @@ public class GompertzGrowth {
         Map.Entry<String, Integer> entry = confirmedCases.firstEntry();
         int init = entry.getValue() % 10_000;
         for (Map.Entry<String, Integer> stringIntegerEntry : confirmedCases.entrySet()) {
-            if(stringIntegerEntry.equals(entry)) {
+            if (stringIntegerEntry.equals(entry)) {
                 this.confirmedCases.put(stringIntegerEntry.getKey(), init);
                 continue;
             }
@@ -36,35 +36,13 @@ public class GompertzGrowth {
     }
 
     public void predictionCases() {
-        for (Map.Entry<String, Integer> stringIntegerEntry : confirmedCases.entrySet()) {
-            log.warn(stringIntegerEntry+"");
-        }
         binarySearch();
-        System.out.println(error);
-        System.out.println(this.a);
-        System.out.println(this.b);
-        System.out.println(this.c);
         Map<String, List<Long>> predictionsFuture = new HashMap<>();
 
         String day = LocalDate.now().format(formatter);
-        int counter = confirmedCases.size() + 1;
-        List<Double> constants = new ArrayList<>();
-        constants.add(a);
-        constants.add(b);
-        constants.add(c);
-        System.out.println(counter);
         for (int i = 1; i <= WEEKS * 7; i++) {
             List<Long> predictionRange = new ArrayList<>(3);
-//            predictionRange.add((long) formula(constants, counter));
-            log.warn("" + predict(constants, counter));
-//            predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - 1)
-//                    + trend.get(trend.size() - 1))
-//                    * seasonalCopy.get(seasonalCopy.size() - (SEASONAL_PERIOD * SEASONAL_REPETITION - i) - 1)), 1), 0));
-//            predictionRange.add(lowBound(predictionRange.get(0)));
-//            predictionRange.add(highBound(predictionRange.get(0)));
             predictionsFuture.put(day + ".csv", predictionRange);
-            counter++;
-
             day = LocalDate.parse(day, formatter).plusDays(1L).format(formatter);
         }
     }
@@ -102,7 +80,7 @@ public class GompertzGrowth {
             counter++;
         }
 
-        if(!Double.isNaN(sum) && !Double.isInfinite(sum)) {
+        if (!Double.isNaN(sum) && !Double.isInfinite(sum)) {
 //            sum = Math.sqrt(sum);
         }
 

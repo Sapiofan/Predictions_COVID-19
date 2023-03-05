@@ -2,15 +2,20 @@ package com.sapiofan.predictions.services.regression;
 
 import com.sapiofan.predictions.entities.Data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class LinearRegression {
 
     private final int DAYS = 30;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+
+    private static final String WORLD = "World";
+    private static final String CSV_EXTENSION = ".csv";
 
 
     /**
@@ -21,7 +26,7 @@ public class LinearRegression {
      *              r = sum((x - x') * (y - y'))/sqrt(sum((x - x')*(x - x')) * sum((y - y')*(y - y'))), x' = average label,
      * @return predicted cases for a certain country or world in general
      */
-    public List<Double> SimpleRegression(Data data, Map<String, Integer> cases) {
+    public List<Double> simpleRegression(Data data, Map<String, Integer> cases) {
         double a, b;
         double averageX, averageY;
         Map<Integer, Double> xDiff;
@@ -100,7 +105,83 @@ public class LinearRegression {
             calculateThetas(data, cases, thetas);
         }
 
+        gradientDescentResult(data, cases, thetas);
+
         return thetas;
+    }
+
+    public void analyzeNewCasesForWorld(Data data, Map<String, Integer> worldCases) {
+        List<Double> betterLine = analyzeData(data, worldCases);
+
+        for (int i = 1; i <= DAYS; i++) {
+            Map<String, List<Integer>> worldPrediction = new HashMap<>();
+            List<Integer> list = new ArrayList<>();
+            list.add((int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            worldPrediction.put(WORLD, list);
+            data.getPredictionNewCases().put(LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION, worldPrediction);
+        }
+    }
+
+    public void analyzeNewDeathsForWorld(Data data, Map<String, Integer> worldCases) {
+        List<Double> betterLine = analyzeData(data, worldCases);
+
+        for (int i = 1; i <= DAYS; i++) {
+            Map<String, List<Integer>> worldPrediction = new HashMap<>();
+            List<Integer> list = new ArrayList<>();
+            list.add((int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            worldPrediction.put(WORLD, list);
+            data.getPredictionNewDeaths().put(LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION, worldPrediction);
+        }
+    }
+
+    public void analyzeNewCasesForCountry(Data data, String country, Map<String, Integer> countryCases) {
+        List<Double> betterLine = analyzeData(data, countryCases);
+
+        for (int i = 1; i <= DAYS; i++) {
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION;
+            Map<String, List<Integer>> countryPrediction = data.getPredictionNewCases().entrySet()
+                    .stream().filter(s -> s.getKey().equals(date))
+                    .findFirst().map(Map.Entry::getValue).orElse(new HashMap<>());
+            List<Integer> list = new ArrayList<>();
+            list.add((int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            countryPrediction.put(country, list);
+            data.getPredictionNewCases().replace(date, countryPrediction);
+        }
+    }
+
+    public void analyzeNewDeathsForCountry(Data data, String country, Map<String, Integer> countryDeaths) {
+        List<Double> betterLine = analyzeData(data, countryDeaths);
+
+        for (int i = 1; i <= DAYS; i++) {
+            String date = LocalDate.now().plusDays(i - 1).format(formatter) + CSV_EXTENSION;
+            Map<String, List<Integer>> countryPrediction = data.getPredictionNewDeaths()
+                    .entrySet().stream().filter(s -> s.getKey().equals(date))
+                    .findFirst().map(Map.Entry::getValue).orElse(new HashMap<>());
+            List<Integer> list = new ArrayList<>();
+            list.add((int) getPrediction(betterLine.get(1), betterLine.get(0), DAYS + i));
+            countryPrediction.put(country, list);
+            data.getPredictionNewDeaths().replace(date, countryPrediction);
+        }
+    }
+
+    private List<Double> analyzeData(Data data, Map<String, Integer> countryCases) {
+        List<Double> simpleRegression = simpleRegression(data, countryCases);
+        double simpleRegressionErr = MSE(data, countryCases, simpleRegression);
+        List<Double> descendentGradient = gradientDescent(data, countryCases);
+        double descendentGradientErr = MSE(data, countryCases, descendentGradient);
+
+//        log.warn("Regression: " + simpleRegressionErr);
+//        log.warn("Gradient result: " + descendentGradientErr);
+
+        List<Double> betterLine;
+
+        if (simpleRegressionErr > descendentGradientErr) {
+            betterLine = descendentGradient;
+        } else {
+            betterLine = simpleRegression;
+        }
+
+        return betterLine;
     }
 
     private void calculateThetas(Data data, Map<String, Integer> cases, List<Double> thetas) {
@@ -114,5 +195,21 @@ public class LinearRegression {
 
         thetas.set(0, (thetas.get(0) - alpha * interceptGradient));
         thetas.set(1, (thetas.get(1) - alpha * (1.0 / cases.size()) * slopeGradient));
+    }
+
+    private void gradientDescentResult(Data data, Map<String, Integer> cases, List<Double> thetas) {
+        TreeMap<String, Integer> testCases = new TreeMap<>(data.dateComparator());
+        for (Map.Entry<String, Integer> stringIntegerEntry : cases.entrySet()) {
+            testCases.put(stringIntegerEntry.getKey(), (int) getPrediction(thetas.get(0), thetas.get(1),
+                    data.getLabelsByDate().get(stringIntegerEntry.getKey())));
+        }
+        int counter = data.getLabelsByDate().get(testCases.lastKey());
+        for (int i = 1; i <= 28; i++) {
+            testCases.put(LocalDate.parse(testCases.lastKey().substring(0, testCases.lastKey().indexOf(".")), formatter)
+                    .plusDays(i).format(formatter) + CSV_EXTENSION, (int) getPrediction(thetas.get(0), thetas.get(1), ++counter));
+        }
+        for (Map.Entry<String, Integer> stringIntegerEntry : testCases.entrySet()) {
+            System.out.println(stringIntegerEntry.getKey() + " : " + stringIntegerEntry.getValue());
+        }
     }
 }
