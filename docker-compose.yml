@@ -1,0 +1,80 @@
+version: '3'
+
+#services:
+#  app:
+#    image: 'docker-spring-boot-postgres:latest'
+#    build:
+#      context: .
+#    container_name: app
+#    depends_on:
+#      - db
+#    environment:
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+#      - SPRING_DATASOURCE_USERNAME=postgres
+#      - SPRING_DATASOURCE_PASSWORD=admin
+#      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+#
+#  db:
+#    image: postgres:14
+#    container_name: db
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=admin
+
+#services:
+#  server:
+#    image: 'docker-spring-boot-postgres:latest'
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - spring.datasource.url=jdbc:mysql://db:3306/employeedb?useSSL=false
+#      - spring.datasource.username=postgres
+#      - spring.datasource.password=admin
+#    networks:
+#      - springpostgres-net
+#    depends_on:
+#      - db
+#
+#  db:
+#    image: postgres:14
+#    networks:
+#      - springpostgres-net
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=admin
+#
+#networks:
+#  springpostgres-net:
+
+services:
+  backend:
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      - POSTGRES_DB=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - spring-postgres
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - spring-postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=admin
+    expose:
+      - 5432
+volumes:
+  db-data:
+networks:
+  spring-postgres:
