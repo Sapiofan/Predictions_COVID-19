@@ -34,6 +34,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     private static final String DATA_FOLDER = "data/";
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+    private final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private int DAYS = 181;
 
@@ -230,7 +231,7 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     @Override
     public List<String> countriesFromFile() {
         List<String> countries;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(RESOURCES + "countries.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(RESOURCES + "countries2.txt"))) {
             countries = bufferedReader.lines().collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Error while getting countries list: " + e);
@@ -253,5 +254,100 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         }
 
         return countries;
+    }
+
+    @Override
+    public void downloadFileFromOurWorldData() {
+        DAYS = 0;
+        String url = "https://covid.ourworldindata.org/data/owid-covid-data.csv";
+        Path folder = Paths.get(RESOURCES + DATA_FOLDER);
+        File statisticsFolder = new File(folder.toString());
+        List<String> fileNames = sortFilesByDate(statisticsFolder);
+        removeExtraFilesInStatistics(fileNames,
+                new ArrayList<>(Arrays.asList(Objects.requireNonNull(statisticsFolder.listFiles()))));
+        try {
+            downloadFile(url, folder + "/" + "owid-covid-data" + CSV_EXTENSION);
+        } catch (IOException e) {
+            log.error("Error while downloading fileNames from github: " + e);
+        }
+    }
+
+    @Override
+    public void readDataFromOneFile(Data data, int days) {
+        if(days > 0) {
+            DAYS = days;
+        }
+        File file = new File(RESOURCES + DATA_FOLDER + "owid-covid-data.csv");
+        boolean header = true;
+        LocalDate localDate = LocalDate.now().minusDays(DAYS);
+        LocalDate localDate2 = LocalDate.now().minusDays(7);
+        try (CSVReader csvReader = new CSVReader(new FileReader(file))) {
+            String[] values;
+            while ((values = csvReader.readNext()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
+                if(localDate.isAfter(LocalDate.parse(values[3], formatter2))
+                        || localDate2.isBefore(LocalDate.parse(values[3], formatter2))) {
+                    continue;
+                }
+                if(values[3].equals("European Union") || values[3].equals("Low income") || values[3].equals("High income")
+                        || values[3].equals("Reunion") || values[3].equals("Lower middle income")
+                        || values[3].equals("Upper middle income")) {
+                    continue;
+                }
+                Map<String, Long> dayCases = data.getConfirmedCases()
+                        .get(LocalDate.parse(values[3], formatter2).format(formatter) + CSV_EXTENSION);
+                Map<String, Integer> newCases = data.getNewCases()
+                        .get(LocalDate.parse(values[3], formatter2).format(formatter) + CSV_EXTENSION);
+                Map<String, Integer> dayDeaths = data.getDeaths()
+                        .get(LocalDate.parse(values[3], formatter2).format(formatter) + CSV_EXTENSION);
+                Map<String, Integer> newDeaths = data.getNewDeaths()
+                        .get(LocalDate.parse(values[3], formatter2).format(formatter) + CSV_EXTENSION);
+                if(dayCases == null) {
+                    dayCases = new HashMap<>();
+                    dayDeaths = new HashMap<>();
+                    newCases = new HashMap<>();
+                    newDeaths = new HashMap<>();
+                    data.getConfirmedCases().put(LocalDate.parse(values[3], formatter2)
+                            .format(formatter) + CSV_EXTENSION, dayCases);
+                    data.getDeaths().put(LocalDate.parse(values[3], formatter2)
+                            .format(formatter) + CSV_EXTENSION, dayDeaths);
+                    data.getNewCases().put(LocalDate.parse(values[3], formatter2)
+                            .format(formatter) + CSV_EXTENSION, newCases);
+                    data.getNewDeaths().put(LocalDate.parse(values[3], formatter2)
+                            .format(formatter) + CSV_EXTENSION, newDeaths);
+                }
+                dayCases.put(values[2], (long) Double.parseDouble(values[4].isEmpty()?"0":values[4]));
+                newCases.put(values[2], (int) Double.parseDouble(values[5].isEmpty()?"0":values[5]));
+                dayDeaths.put(values[2], (int) Double.parseDouble(values[7].isEmpty()?"0":values[7]));
+                newDeaths.put(values[2], (int) Double.parseDouble(values[8].isEmpty()?"0":values[8]));
+            }
+        } catch (IOException e) {
+            log.error("Something went wrong while reading CSV files: " + e);
+        }
+        Map<String, Integer> labels = data.getLabelsByDate();
+        TreeMap<String, Map<String, Integer>> dates = new TreeMap<>(data.dateComparator());
+        dates.putAll(data.getNewCases());
+        int counter = 0;
+        for (String s : dates.keySet()) {
+            labels.put(s, counter++);
+        }
+
+        for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
+            data.getNewCases().get(stringMapEntry.getKey()).put("Americas",
+                    data.getNewCases().get(stringMapEntry.getKey()).get("North America") +
+                            data.getNewCases().get(stringMapEntry.getKey()).get("South America"));
+            data.getNewDeaths().get(stringMapEntry.getKey()).put("Americas",
+                    data.getNewDeaths().get(stringMapEntry.getKey()).get("North America") +
+                            data.getNewDeaths().get(stringMapEntry.getKey()).get("South America"));
+            data.getConfirmedCases().get(stringMapEntry.getKey()).put("Americas",
+                    data.getConfirmedCases().get(stringMapEntry.getKey()).get("North America") +
+                            data.getConfirmedCases().get(stringMapEntry.getKey()).get("South America"));
+            data.getDeaths().get(stringMapEntry.getKey()).put("Americas",
+                    data.getDeaths().get(stringMapEntry.getKey()).get("North America") +
+                            data.getDeaths().get(stringMapEntry.getKey()).get("South America"));
+        }
     }
 }

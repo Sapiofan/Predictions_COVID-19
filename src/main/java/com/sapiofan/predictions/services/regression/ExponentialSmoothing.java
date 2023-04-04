@@ -5,7 +5,6 @@ import org.apache.commons.math3.util.Precision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -33,8 +32,7 @@ public class ExponentialSmoothing {
         if (cases == null || cases.size() == 0) {
             return;
         }
-        EXISTED_PERIOD_AFTER_SEASONAL = Objects.requireNonNull(new File("src/main/resources/data/").list()).length
-                - SEASONAL_PERIOD - 2;
+        EXISTED_PERIOD_AFTER_SEASONAL = cases.size() - SEASONAL_PERIOD - 2;
 
         Map<String, List<Integer>> prediction = minimizationOfError(data, cases);
 
@@ -180,7 +178,12 @@ public class ExponentialSmoothing {
 
         Map<String, List<Integer>> predictionsFuture = new HashMap<>();
 
-        String day = LocalDate.now().format(formatter);
+        TreeMap<String, Integer> sortedCases = new TreeMap<>(data.dateComparator());
+        sortedCases.putAll(cases);
+
+        String day = LocalDate.parse(sortedCases.lastKey().substring(0, sortedCases.lastKey().indexOf(".")), formatter)
+                .plusDays(1).format(formatter);
+//        String day = LocalDate.now().format(formatter);
         for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {
             List<Integer> predictionRange = new ArrayList<>(3);
             predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - 1)

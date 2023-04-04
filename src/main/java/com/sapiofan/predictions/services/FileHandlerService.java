@@ -15,4 +15,8 @@ public interface FileHandlerService {
     List<String> countriesFromFile();
 
     Map<String, String> countriesByRegions();
+
+    void downloadFileFromOurWorldData();
+
+    void readDataFromOneFile(Data data, int days);
 }
