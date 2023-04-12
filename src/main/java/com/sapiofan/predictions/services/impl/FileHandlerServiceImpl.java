@@ -258,7 +258,6 @@ public class FileHandlerServiceImpl implements FileHandlerService {
 
     @Override
     public void downloadFileFromOurWorldData() {
-        DAYS = 0;
         String url = "https://covid.ourworldindata.org/data/owid-covid-data.csv";
         Path folder = Paths.get(RESOURCES + DATA_FOLDER);
         File statisticsFolder = new File(folder.toString());
