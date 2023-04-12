@@ -308,32 +308,52 @@ chartType_r.addEventListener('change', (event) => {
 
     if (event.currentTarget.checked) {
         if(dataType_r.checked) {
-            chartColumn("container1", getWorldCases("Europe"));
-            chartColumn("container2", getWorldCases("Americas"));
-            chartColumn("container3", getWorldCases("Asia"));
-            chartColumn("container4", getWorldCases("Oceania"));
-            chartColumn("container5", getWorldCases("Africa"));
-        } else {
+            // chartColumn("container1", getWorldCases("Europe"));
+            // chartColumn("container2", getWorldCases("Americas"));
+            // chartColumn("container3", getWorldCases("Asia"));
+            // chartColumn("container4", getWorldCases("Oceania"));
+            // chartColumn("container5", getWorldCases("Africa"));
             chartColumn("container1", getWorldDeaths("Europe"));
             chartColumn("container2", getWorldDeaths("Americas"));
             chartColumn("container3", getWorldDeaths("Asia"));
             chartColumn("container4", getWorldDeaths("Oceania"));
             chartColumn("container5", getWorldDeaths("Africa"));
+        } else {
+            chartColumn("container1", getWorldCases("Europe"));
+            chartColumn("container2", getWorldCases("Americas"));
+            chartColumn("container3", getWorldCases("Asia"));
+            chartColumn("container4", getWorldCases("Oceania"));
+            chartColumn("container5", getWorldCases("Africa"));
+            // chartColumn("container1", getWorldDeaths("Europe"));
+            // chartColumn("container2", getWorldDeaths("Americas"));
+            // chartColumn("container3", getWorldDeaths("Asia"));
+            // chartColumn("container4", getWorldDeaths("Oceania"));
+            // chartColumn("container5", getWorldDeaths("Africa"));
         }
         typeOfChartLinearRegion = false;
     } else {
         if(dataType_r.checked) {
-            chartLine("container1", getWorldCases("Europe"));
-            chartLine("container2", getWorldCases("Americas"));
-            chartLine("container3", getWorldCases("Asia"));
-            chartLine("container4", getWorldCases("Oceania"));
-            chartLine("container5", getWorldCases("Africa"));
-        } else {
+            // chartLine("container1", getWorldCases("Europe"));
+            // chartLine("container2", getWorldCases("Americas"));
+            // chartLine("container3", getWorldCases("Asia"));
+            // chartLine("container4", getWorldCases("Oceania"));
+            // chartLine("container5", getWorldCases("Africa"));
             chartLine("container1", getWorldDeaths("Europe"));
             chartLine("container2", getWorldDeaths("Americas"));
             chartLine("container3", getWorldDeaths("Asia"));
             chartLine("container4", getWorldDeaths("Oceania"));
             chartLine("container5", getWorldDeaths("Africa"));
+        } else {
+            chartLine("container1", getWorldCases("Europe"));
+            chartLine("container2", getWorldCases("Americas"));
+            chartLine("container3", getWorldCases("Asia"));
+            chartLine("container4", getWorldCases("Oceania"));
+            chartLine("container5", getWorldCases("Africa"));
+            // chartLine("container1", getWorldDeaths("Europe"));
+            // chartLine("container2", getWorldDeaths("Americas"));
+            // chartLine("container3", getWorldDeaths("Asia"));
+            // chartLine("container4", getWorldDeaths("Oceania"));
+            // chartLine("container5", getWorldDeaths("Africa"));
         }
         typeOfChartLinearRegion = true;
     }

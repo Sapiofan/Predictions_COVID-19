@@ -114,6 +114,14 @@ public class ExponentialSmoothing {
             constants.set(2, constants.get(2) + chunk);
         }
 
+        constants.set(0, ALPHA);
+        constants.set(1, BETTA);
+        constants.set(2, GAMMA);
+        boundsSmoothing(constants);
+        ALPHA = constants.get(0);
+        BETTA = constants.get(1);
+        GAMMA = constants.get(2);
+
         return predictionForCountry(data, cases, seasonal);
     }
 
@@ -128,16 +136,6 @@ public class ExponentialSmoothing {
         List<Double> level = new ArrayList<>();
         List<Double> trend = new ArrayList<>();
         double alpha = ALPHA, betta = BETTA, gamma = GAMMA;
-
-        if (alpha > 0.99) {
-            alpha = 0.99;
-        }
-        if (betta > 0.99) {
-            betta = 0.99;
-        }
-        if (gamma > 0.99) {
-            gamma = 0.99;
-        }
 
         // initial level
         level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD))
@@ -184,10 +182,17 @@ public class ExponentialSmoothing {
         String day = LocalDate.parse(sortedCases.lastKey().substring(0, sortedCases.lastKey().indexOf(".")), formatter)
                 .plusDays(1).format(formatter);
 //        String day = LocalDate.now().format(formatter);
+        int counter = 1;
+        for (int i = 0; i < 10; i++) {
+            if(level.get(level.size() - (counter + i)) + trend.get(trend.size() - (counter + i)) > 0) {
+                counter += i;
+                break;
+            }
+        }
         for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {
             List<Integer> predictionRange = new ArrayList<>(3);
-            predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - 1)
-                    + trend.get(trend.size() - 1))
+            predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - counter)
+                    + trend.get(trend.size() - counter))
                     * seasonalCopy.get(seasonalCopy.size() - (SEASONAL_PERIOD * SEASONAL_REPETITION - i) - 1)), 1), 0));
             predictionRange.add(lowBound(predictionRange.get(0)));
             predictionRange.add(highBound(predictionRange.get(0)));
@@ -211,17 +216,8 @@ public class ExponentialSmoothing {
         List<Double> seasonalCopy = new ArrayList<>(seasonal);
         List<Double> level = new ArrayList<>();
         List<Double> trend = new ArrayList<>();
+        boundsSmoothing(constants);
         double alpha = constants.get(0), betta = constants.get(1), gamma = constants.get(2);
-
-        if (alpha > 0.99) {
-            alpha = 0.99;
-        }
-        if (betta > 0.99) {
-            betta = 0.99;
-        }
-        if (gamma > 0.99) {
-            gamma = 0.99;
-        }
 
         // initial level
         level.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD))
@@ -288,6 +284,28 @@ public class ExponentialSmoothing {
         }
 
         return list;
+    }
+
+    private void boundsSmoothing(List<Double> constants) {
+        if (constants.get(0) > 0.99) {
+            constants.set(0, 0.99);
+        }
+        if (constants.get(1) > 0.99) {
+            constants.set(1, 0.99);
+        }
+        if (constants.get(2) > 0.99) {
+            constants.set(2, 0.99);
+        }
+
+        if (constants.get(0) < 0.01) {
+            constants.set(0, 0.01);
+        }
+        if (constants.get(1) < 0.01) {
+            constants.set(1, 0.01);
+        }
+        if (constants.get(2) < 0.01) {
+            constants.set(2, 0.01);
+        }
     }
 
     private TreeMap<String, Integer> sortCasesByDate(Data data, Map<String, Integer> cases) {
