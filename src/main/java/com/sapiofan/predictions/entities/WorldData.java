@@ -71,6 +71,7 @@ public class WorldData {
 
     private TreeMap<String, Map<String, List<Integer>>> calculateCasesWeekly(TreeMap<String, Map<String, List<Integer>>> map,
                                                                              TreeMap<String, Map<String, List<Integer>>> cases) {
+
         Map<String, List<Integer>> areas = worldCases.lastEntry()
                 .getValue()
                 .entrySet()
@@ -101,6 +102,25 @@ public class WorldData {
 
         if (counter > 0) {
             map.put(cases.lastKey(), areas);
+        }
+
+        boolean f = false;
+        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : map.entrySet()) {
+            for (Map.Entry<String, List<Integer>> stringListEntry : stringMapEntry.getValue().entrySet()) {
+                if(stringListEntry.getValue().get(2) == 0) {
+                    stringListEntry.getValue().set(1, null);
+                    stringListEntry.getValue().set(2, null);
+                } else {
+                    f = true;
+                }
+            }
+            if(f) {
+                for (Map.Entry<String, List<Integer>> stringListEntry : stringMapEntry.getValue().entrySet()) {
+                    stringListEntry.getValue().set(1, stringListEntry.getValue().get(0));
+                    stringListEntry.getValue().set(2, stringListEntry.getValue().get(0));
+                }
+                break;
+            }
         }
 
         return map;
@@ -135,13 +155,13 @@ public class WorldData {
                                                                              TreeMap<String, Map<String, List<Integer>>> worldCases) {
         TreeMap<String, Map<String, List<Integer>>> map = new TreeMap<>(confirmedCases.subMap(LocalDate.now().format(formatter),
                 true, confirmedCases.lastKey(), false));
-        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : map.entrySet()) {
-            for (Map.Entry<String, List<Integer>> stringListEntry : stringMapEntry.getValue().entrySet()) {
-                List<Integer> list = worldCases.get(stringMapEntry.getKey()).get(stringListEntry.getKey());
-                stringListEntry.getValue().add(stringListEntry.getValue().get(0) - list.get(1));
-                stringListEntry.getValue().add(stringListEntry.getValue().get(0) + list.get(2));
-            }
-        }
+//        for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : map.entrySet()) {
+//            for (Map.Entry<String, List<Integer>> stringListEntry : stringMapEntry.getValue().entrySet()) {
+//                List<Integer> list = worldCases.get(stringMapEntry.getKey()).get(stringListEntry.getKey());
+//                stringListEntry.getValue().add(stringListEntry.getValue().get(0) - list.get(1));
+//                stringListEntry.getValue().add(stringListEntry.getValue().get(0) + list.get(2));
+//            }
+//        }
 
         return map;
     }

@@ -246,7 +246,7 @@ type_r.addEventListener('change', (event) => {
             }
         }
     } else {
-        if(quantity.checked) {
+        if(quantity_r.checked) {
             if(dataType_r.checked) {
                 changeRegionChartMode("deaths", false, true);
             } else {
@@ -264,7 +264,7 @@ type_r.addEventListener('change', (event) => {
 
 quantity_r.addEventListener('change', (event) => {
     if (event.currentTarget.checked) {
-        if(type.checked) {
+        if(type_r.checked) {
             if(dataType_r.checked) {
                 changeRegionChartMode("deaths", true, true);
             } else {
@@ -278,7 +278,7 @@ quantity_r.addEventListener('change', (event) => {
             }
         }
     } else {
-        if(type.checked) {
+        if(type_r.checked) {
             if(dataType_r.checked) {
                 changeRegionChartMode("deaths", true, false);
             } else {
@@ -308,11 +308,6 @@ chartType_r.addEventListener('change', (event) => {
 
     if (event.currentTarget.checked) {
         if(dataType_r.checked) {
-            // chartColumn("container1", getWorldCases("Europe"));
-            // chartColumn("container2", getWorldCases("Americas"));
-            // chartColumn("container3", getWorldCases("Asia"));
-            // chartColumn("container4", getWorldCases("Oceania"));
-            // chartColumn("container5", getWorldCases("Africa"));
             chartColumn("container1", getWorldDeaths("Europe"));
             chartColumn("container2", getWorldDeaths("Americas"));
             chartColumn("container3", getWorldDeaths("Asia"));
@@ -324,20 +319,10 @@ chartType_r.addEventListener('change', (event) => {
             chartColumn("container3", getWorldCases("Asia"));
             chartColumn("container4", getWorldCases("Oceania"));
             chartColumn("container5", getWorldCases("Africa"));
-            // chartColumn("container1", getWorldDeaths("Europe"));
-            // chartColumn("container2", getWorldDeaths("Americas"));
-            // chartColumn("container3", getWorldDeaths("Asia"));
-            // chartColumn("container4", getWorldDeaths("Oceania"));
-            // chartColumn("container5", getWorldDeaths("Africa"));
         }
         typeOfChartLinearRegion = false;
     } else {
         if(dataType_r.checked) {
-            // chartLine("container1", getWorldCases("Europe"));
-            // chartLine("container2", getWorldCases("Americas"));
-            // chartLine("container3", getWorldCases("Asia"));
-            // chartLine("container4", getWorldCases("Oceania"));
-            // chartLine("container5", getWorldCases("Africa"));
             chartLine("container1", getWorldDeaths("Europe"));
             chartLine("container2", getWorldDeaths("Americas"));
             chartLine("container3", getWorldDeaths("Asia"));
@@ -349,11 +334,6 @@ chartType_r.addEventListener('change', (event) => {
             chartLine("container3", getWorldCases("Asia"));
             chartLine("container4", getWorldCases("Oceania"));
             chartLine("container5", getWorldCases("Africa"));
-            // chartLine("container1", getWorldDeaths("Europe"));
-            // chartLine("container2", getWorldDeaths("Americas"));
-            // chartLine("container3", getWorldDeaths("Asia"));
-            // chartLine("container4", getWorldDeaths("Oceania"));
-            // chartLine("container5", getWorldDeaths("Africa"));
         }
         typeOfChartLinearRegion = true;
     }
@@ -361,7 +341,7 @@ chartType_r.addEventListener('change', (event) => {
 
 dataType_r.addEventListener('change', (event) => {
     if (event.currentTarget.checked) {
-        if(type.checked) {
+        if(type_r.checked) {
             if(quantity_r.checked) {
                 changeRegionChartMode("deaths", true, true);
             } else {
@@ -375,7 +355,7 @@ dataType_r.addEventListener('change', (event) => {
             }
         }
     } else {
-        if(type.checked) {
+        if(type_r.checked) {
             if(quantity_r.checked) {
                 changeRegionChartMode("cases", true, true);
             } else {

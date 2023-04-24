@@ -110,6 +110,23 @@ public class CountryData {
             map.put(cases.lastKey(), list);
         }
 
+        boolean f = false;
+        List<Integer> list1 = null;
+        for (Map.Entry<String, List<Integer>> stringMapEntry : map.entrySet()) {
+            if(!f) {
+                list1 = stringMapEntry.getValue();
+                f = true;
+                continue;
+            }
+            if(stringMapEntry.getValue().get(0).equals(stringMapEntry.getValue().get(1))) {
+                list1.set(1, null);
+                list1.set(2, null);
+                list1 = stringMapEntry.getValue();
+                continue;
+            }
+            break;
+        }
+
         return map;
     }
 
@@ -143,11 +160,11 @@ public class CountryData {
         TreeMap<String, List<Integer>> map = new TreeMap<>(countryConfirmedCases.subMap(LocalDate.now().format(formatter),
                 true, countryConfirmedCases.lastKey(), false));
 
-        for (Map.Entry<String, List<Integer>> stringListEntry : map.entrySet()) {
-            List<Integer> list = countryCases.get(stringListEntry.getKey());
-            stringListEntry.getValue().add(stringListEntry.getValue().get(0) - list.get(1));
-            stringListEntry.getValue().add(stringListEntry.getValue().get(0) + list.get(2));
-        }
+//        for (Map.Entry<String, List<Integer>> stringListEntry : map.entrySet()) {
+//            List<Integer> list = countryCases.get(stringListEntry.getKey());
+//            stringListEntry.getValue().add(stringListEntry.getValue().get(0) - list.get(1));
+//            stringListEntry.getValue().add(stringListEntry.getValue().get(0) + list.get(2));
+//        }
 
         return map;
     }
