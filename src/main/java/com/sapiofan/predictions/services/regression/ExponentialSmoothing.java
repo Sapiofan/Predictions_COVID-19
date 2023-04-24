@@ -79,10 +79,13 @@ public class ExponentialSmoothing {
      * optimization to find the minimum error by changing alpha, betta, gamma constants
      */
     private Map<String, List<Integer>> minimizationOfError(Data data, Map<String, Integer> cases) {
+        // sort cases by dates
         TreeMap<String, Integer> sortedCasesByDate = sortCasesByDate(data, cases);
+        // calculate first 7 initial seasonal coefficients
         List<Double> seasonal = calculateInitialSeasonal(data, sortedCasesByDate);
         List<Double> seasonalCopy = new ArrayList<>(seasonal);
 
+        // assign initial constants as 0
         List<Double> constants = new ArrayList<>();
         constants.add(0.0);
         constants.add(0.0);
@@ -90,6 +93,7 @@ public class ExponentialSmoothing {
 
         double localError, chunk = 0.1;
 
+        // iterate through fixed coefficients to find minimum error
         for (int i = 0; i <= 10; i++) {
             for (int j = 0; j <= 10; j++) {
                 for (int k = 0; k <= 10; k++) {
@@ -145,11 +149,12 @@ public class ExponentialSmoothing {
         trend.add(Precision.round(cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD)) / seasonalCopy.get(0)
                 - cases.get(data.getLabelsByNumber().get(SEASONAL_PERIOD - 1)) / seasonalCopy.get(SEASONAL_PERIOD - 1), 5));
 
+        // labeled date from 0 ... N, as maps in Java doesn't save order of insertion
         Map<Integer, String> numberLabels = data.getLabelsByNumber();
 
         for (int i = 0; i < EXISTED_PERIOD_AFTER_SEASONAL - 1; i++) {
-            if (level.get(i) == 0) {
-                if (new BigDecimal(gamma).equals(new BigDecimal(1))) {
+            if (level.get(i) == 0) { // check if level is 0 to avoid dividing on 0
+                if (new BigDecimal(gamma).equals(new BigDecimal(1))) { // check if gamma is 1 to avoid dividing by 0
                     seasonalCopy.add(Precision.round(((1 - gamma) * seasonalCopy.get(i)), 7));
                 } else {
                     seasonalCopy.add(Precision.round((0.01 * seasonalCopy.get(i)), 7));
@@ -158,37 +163,44 @@ public class ExponentialSmoothing {
                 seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + i))
                         / level.get(i) + (1 - gamma) * seasonalCopy.get(i)), 7));
             }
-            if (Math.abs(seasonalCopy.get(seasonalCopy.size() - 1)) < MIN_SEASONAL) {
-                if (seasonalCopy.get(seasonalCopy.size() - 1) < 0) {
+            if (Math.abs(seasonalCopy.get(seasonalCopy.size() - 1)) < MIN_SEASONAL) { // check if seasonal factor tends to 0
+                if (seasonalCopy.get(seasonalCopy.size() - 1) < 0) { // if yes assign minimum possible number ±0.00000001
                     seasonalCopy.set(seasonalCopy.size() - 1, -MIN_SEASONAL);
                 } else {
                     seasonalCopy.set(seasonalCopy.size() - 1, MIN_SEASONAL);
                 }
             }
+            // add new level to array
             level.add(Precision.round((alpha * cases.get(numberLabels.get(SEASONAL_PERIOD + i + 1)) / seasonalCopy.get(i + 1)
                     + (1 - alpha) * (level.get(i) + trend.get(i))), 7));
+            // add new trend to array
             trend.add(Precision.round((betta * (level.get(i + 1) - level.get(i)) + (1 - betta) * trend.get(i)), 7));
         }
 
+        // add last seasonal factor
         seasonalCopy.add(Precision.round((gamma * cases.get(numberLabels.get(SEASONAL_PERIOD + EXISTED_PERIOD_AFTER_SEASONAL - 1))
                 / level.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)
                 + (1 - gamma) * seasonalCopy.get(EXISTED_PERIOD_AFTER_SEASONAL - 1)), 7));
 
         Map<String, List<Integer>> predictionsFuture = new HashMap<>();
 
+        // sort cases by dates
         TreeMap<String, Integer> sortedCases = new TreeMap<>(data.dateComparator());
         sortedCases.putAll(cases);
 
+        // define last date of existed data
         String day = LocalDate.parse(sortedCases.lastKey().substring(0, sortedCases.lastKey().indexOf(".")), formatter)
                 .plusDays(1).format(formatter);
 //        String day = LocalDate.now().format(formatter);
         int counter = 1;
+        // define the most suitable last level and trend factors
         for (int i = 0; i < 10; i++) {
             if(level.get(level.size() - (counter + i)) + trend.get(trend.size() - (counter + i)) > 0) {
                 counter += i;
                 break;
             }
         }
+        // calculate prediction data and add bounds (confidence interval)
         for (int i = 1; i <= SEASONAL_PERIOD * SEASONAL_REPETITION; i++) {
             List<Integer> predictionRange = new ArrayList<>(3);
             predictionRange.add(Math.max((int) Precision.round(((level.get(level.size() - counter)
@@ -321,6 +333,7 @@ public class ExponentialSmoothing {
         Map<String, Integer> withoutSeasonalPeriod = new TreeMap<>(data.dateComparator());
         sortedMap.putAll(cases);
         int counter = 0;
+        // skip first 7 dated as it's Seasonal period
         for (Map.Entry<String, Integer> stringIntegerEntry : sortedMap.entrySet()) {
             if (counter - 1 < SEASONAL_PERIOD) {
                 counter++;
@@ -329,6 +342,8 @@ public class ExponentialSmoothing {
             withoutSeasonalPeriod.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
         }
 
+        // to calculate RMSE, it's needed to subtract prediction from existed data, make the result in 2 power for every
+        // substraction, sum up all results and extract square root
         return Precision.round(Math.sqrt(withoutSeasonalPeriod.entrySet()
                 .stream()
                 .mapToDouble(stringIntegerEntry -> Math.pow((stringIntegerEntry.getValue() - predictions
