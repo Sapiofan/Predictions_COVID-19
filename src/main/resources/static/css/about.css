@@ -72,6 +72,7 @@ h1 {
     background-color: #f1f1f1;
     font-size: 22px;
     margin: 0 0 0 20px;
+    height: auto;
 }
 
 .content p {
