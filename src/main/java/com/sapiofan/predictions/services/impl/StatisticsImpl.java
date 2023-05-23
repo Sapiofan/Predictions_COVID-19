@@ -40,47 +40,47 @@ public class StatisticsImpl implements Statistics {
     @Autowired
     private Utils utils;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void doSomethingAfterStartup() {
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Data data = getWorldData();
-
-                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-
-                log.warn("Started calculating exponential smoothing");
-                Date start = new Date();
-
-                for (String country : utils.getCountries()) {
-                    executor.execute(() -> getCountryDataExponential(data, country));
-                }
-
-                while (true) {
-                    if (executor.getActiveCount() == 0) {
-                        handlePredictedCases(data);
-                        Date end = new Date();
-                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
-                        log.warn("Start writing to csv");
-                        fileHandlerService.writeToCSV(data);
-                        log.warn("End writing to csv");
-                        break;
-                    } else {
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException e) {
-                            log.error("Can't sleep timer: " + e);
-                        }
-                    }
-                }
-            }
-        }, 0, 86400000);
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void doSomethingAfterStartup() {
+//        new Timer().scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//                Data data = getWorldData();
+//
+//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+//
+//                log.warn("Started calculating exponential smoothing");
+//                Date start = new Date();
+//
+//                for (String country : utils.getCountries()) {
+//                    executor.execute(() -> getCountryDataExponential(data, country));
+//                }
+//
+//                while (true) {
+//                    if (executor.getActiveCount() == 0) {
+//                        handlePredictedCases(data);
+//                        Date end = new Date();
+//                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
+//                        log.warn("Start writing to csv");
+//                        fileHandlerService.writeToCSV(data);
+//                        log.warn("End writing to csv");
+//                        break;
+//                    } else {
+//                        try {
+//                            Thread.sleep(3000);
+//                        } catch (InterruptedException e) {
+//                            log.error("Can't sleep timer: " + e);
+//                        }
+//                    }
+//                }
+//            }
+//        }, 0, 86400000);
+//    }
 
     @Override
     public Data getWorldData() {
         log.warn("Started downloading of csv files from the site");
-//        fileHandlerService.downloadFileFromOurWorldData();
+        fileHandlerService.downloadFileFromOurWorldData();
         log.warn("Ended downloading of csv files from the site");
         Data data = new Data();
         fileHandlerService.readDataFromOneFile(data, -1);

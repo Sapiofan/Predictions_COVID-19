@@ -56,13 +56,12 @@ public class WorldDataHandler {
     }
 
     public String getLastExistedDate() {
-        final String[] lastDay = new String[1];
-        worldData.existedConfirmedCases().entrySet()
+        return worldData.getWorldCases().entrySet()
                 .stream()
-                .takeWhile(stringMapEntry -> stringMapEntry.getValue().values()
-                        .stream().findFirst().get().size() <= 1)
-                .forEach(stringMapEntry -> lastDay[0] = stringMapEntry.getKey());
-        return lastDay[0];
+                .filter(stringMapEntry -> stringMapEntry.getValue().values().stream()
+                        .findFirst().get().size() == 3)
+                .findFirst()
+                .map(Map.Entry::getKey).orElse("");
     }
 
     public String getLastDate() {

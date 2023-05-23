@@ -120,7 +120,7 @@ public class MainController {
 
         model.addAttribute("cases", map);
         model.addAttribute("dates", allCountries.getNewCases());
-        model.addAttribute("yesterday", LocalDate.now().minusDays(1)
+        model.addAttribute("yesterday", LocalDate.now()
                 .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 
         return "countries";

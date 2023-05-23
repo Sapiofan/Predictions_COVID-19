@@ -72,7 +72,7 @@ public class WorldData {
     private TreeMap<String, Map<String, List<Integer>>> calculateCasesWeekly(TreeMap<String, Map<String, List<Integer>>> map,
                                                                              TreeMap<String, Map<String, List<Integer>>> cases) {
 
-        Map<String, List<Integer>> areas = worldCases.lastEntry()
+        Map<String, List<Integer>> areas = worldCases.firstEntry()
                 .getValue()
                 .entrySet()
                 .stream()
