@@ -40,47 +40,47 @@ public class StatisticsImpl implements Statistics {
     @Autowired
     private Utils utils;
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void doSomethingAfterStartup() {
-//        new Timer().scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Data data = getWorldData();
-//
-//                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
-//
-//                log.warn("Started calculating exponential smooth");
-//                Date start = new Date();
-//
-//                for (String country : utils.getCountries()) {
-//                    executor.execute(() -> getCountryDataExponential(data, country));
-//                }
-//
-//                while (true) {
-//                    if (executor.getActiveCount() == 0) {
-//                        handlePredictedCases(data);
-//                        Date end = new Date();
-//                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
-//                        log.warn("Start writing to csv");
-//                        fileHandlerService.writeToCSV(data);
-//                        log.warn("End writing to csv");
-//                        break;
-//                    } else {
-//                        try {
-//                            Thread.sleep(3000);
-//                        } catch (InterruptedException e) {
-//                            log.error("Can't sleep timer: " + e);
-//                        }
-//                    }
-//                }
-//            }
-//        }, 0, 86400000);
-//    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void doSomethingAfterStartup() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Data data = getWorldData();
+
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+
+                log.warn("Started calculating exponential smoothing");
+                Date start = new Date();
+
+                for (String country : utils.getCountries()) {
+                    executor.execute(() -> getCountryDataExponential(data, country));
+                }
+
+                while (true) {
+                    if (executor.getActiveCount() == 0) {
+                        handlePredictedCases(data);
+                        Date end = new Date();
+                        log.warn("Ended calculating exponential smooth. Time: " + (end.getTime() - start.getTime()) / 1000);
+                        log.warn("Start writing to csv");
+                        fileHandlerService.writeToCSV(data);
+                        log.warn("End writing to csv");
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            log.error("Can't sleep timer: " + e);
+                        }
+                    }
+                }
+            }
+        }, 0, 86400000);
+    }
 
     @Override
     public Data getWorldData() {
         log.warn("Started downloading of csv files from the site");
-        fileHandlerService.downloadFileFromOurWorldData();
+//        fileHandlerService.downloadFileFromOurWorldData();
         log.warn("Ended downloading of csv files from the site");
         Data data = new Data();
         fileHandlerService.readDataFromOneFile(data, -1);
@@ -100,9 +100,17 @@ public class StatisticsImpl implements Statistics {
 
     @Override
     public void getCountryDataExponential(Data data, String country) {
-        ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
-        exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, country), country);
-        exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, country), country);
+        try {
+            ExponentialSmoothing exponentialSmoothing = new ExponentialSmoothing();
+            exponentialSmoothing.predictionCases(data, getNewCasesOfCountry(data, country), country);
+            exponentialSmoothing.predictionDeaths(data, getNewDeathsOfCountry(data, country), country);
+            log.info("Calculation ended for country: " + country);
+        } catch (Exception e) {
+            log.error("Something wrong with calculation of exponential smoothing for " + country + ": " + e);
+            for (StackTraceElement stackTraceElement : e.getStackTrace()) {
+                log.error(stackTraceElement.toString());
+            }
+        }
     }
 
     @Override
@@ -341,16 +349,24 @@ public class StatisticsImpl implements Statistics {
         map.putAll(data.getConfirmedCases());
         prediction.putAll(data.getPredictionNewCases());
         Map<String, Long> lastDayData = map.lastEntry().getValue();
+        Map<String, Long> changedLastDayData = map.lastEntry().getValue();
         for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : prediction.entrySet()) {
             Map<String, Long> predictedDate = new HashMap<>();
-            for (Map.Entry<String, Long> stringIntegerEntry : lastDayData.entrySet()) {
+            for (Map.Entry<String, Long> stringIntegerEntry : changedLastDayData.entrySet()) {
                 if (stringMapEntry.getValue().get(stringIntegerEntry.getKey()) != null) {
-                    predictedDate.put(stringIntegerEntry.getKey(), lastDayData.get(stringIntegerEntry.getKey()) +
-                            stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    if (changedLastDayData.get(stringIntegerEntry.getKey()) == null) {
+                        predictedDate.put(stringIntegerEntry.getKey(), lastDayData.get(stringIntegerEntry.getKey()) +
+                                stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    } else {
+                        predictedDate.put(stringIntegerEntry.getKey(), changedLastDayData.get(stringIntegerEntry.getKey()) +
+                                stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    }
+                } else {
+                    predictedDate.put(stringIntegerEntry.getKey(), null);
                 }
             }
             result.put(stringMapEntry.getKey(), predictedDate);
-            lastDayData = predictedDate;
+            changedLastDayData = predictedDate;
         }
         data.setPredictionConfirmedCases(result);
     }
@@ -362,16 +378,24 @@ public class StatisticsImpl implements Statistics {
         map.putAll(data.getDeaths());
         prediction.putAll(data.getPredictionNewDeaths());
         Map<String, Integer> lastDayData = map.lastEntry().getValue();
+        Map<String, Integer> changedLastDayData = map.lastEntry().getValue();
         for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : prediction.entrySet()) {
             Map<String, Integer> predictedDate = new HashMap<>();
-            for (Map.Entry<String, Integer> stringIntegerEntry : lastDayData.entrySet()) {
+            for (Map.Entry<String, Integer> stringIntegerEntry : changedLastDayData.entrySet()) {
                 if (stringMapEntry.getValue().get(stringIntegerEntry.getKey()) != null) {
-                    predictedDate.put(stringIntegerEntry.getKey(), lastDayData.get(stringIntegerEntry.getKey()) +
-                            stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    if (changedLastDayData.get(stringIntegerEntry.getKey()) == null) {
+                        predictedDate.put(stringIntegerEntry.getKey(), lastDayData.get(stringIntegerEntry.getKey()) +
+                                stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    } else {
+                        predictedDate.put(stringIntegerEntry.getKey(), changedLastDayData.get(stringIntegerEntry.getKey()) +
+                                stringMapEntry.getValue().get(stringIntegerEntry.getKey()).get(0));
+                    }
+                } else {
+                    predictedDate.put(stringIntegerEntry.getKey(), null);
                 }
             }
             result.put(stringMapEntry.getKey(), predictedDate);
-            lastDayData = predictedDate;
+            changedLastDayData = predictedDate;
         }
         data.setPredictionConfirmedDeaths(result);
     }

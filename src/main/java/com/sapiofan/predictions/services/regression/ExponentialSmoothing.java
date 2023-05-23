@@ -13,28 +13,41 @@ import java.util.stream.Collectors;
 
 public class ExponentialSmoothing {
 
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     private static final Logger log = LoggerFactory.getLogger(ExponentialSmoothing.class);
 
-    private final int SEASONAL_PERIOD = 7;
-    private int EXISTED_PERIOD_AFTER_SEASONAL;
-    private final int SEASONAL_REPETITION = 8;
+    final int SEASONAL_PERIOD = 7;
+    int EXISTED_PERIOD_AFTER_SEASONAL;
+    final int SEASONAL_REPETITION = 8;
 
-    private double ALPHA = 0;
-    private double BETTA = 0;
-    private double GAMMA = 0;
-    private double error = -1;
+    double ALPHA = 0;
+    double BETTA = 0;
+    double GAMMA = 0;
+    double error = -1;
 
-    private double MIN_SEASONAL = 0.0000001;
+    final double MIN_SEASONAL = 0.0000001;
 
     public void predictionCases(Data data, Map<String, Integer> cases, String country) {
         if (cases == null || cases.size() == 0) {
             return;
         }
-        EXISTED_PERIOD_AFTER_SEASONAL = cases.size() - SEASONAL_PERIOD - 2;
 
-        Map<String, List<Integer>> prediction = minimizationOfError(data, cases);
+        TreeMap<String, Integer> nonZeroCases = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Integer> sortedCasesByDate = sortCasesByDate(data, cases);
+
+        ExponentialSmoothingWeekly weekly = new ExponentialSmoothingWeekly();
+
+        if(!(weekly.checkWeekSeasonality(cases))) {
+            weekly.fillInNonZeroCases(sortedCasesByDate, nonZeroCases);
+        }
+        Map<String, List<Integer>> prediction;
+        if(nonZeroCases.size() > 0) {
+            prediction = weekly.minimizationOfError(data, nonZeroCases);
+        } else {
+            EXISTED_PERIOD_AFTER_SEASONAL = cases.size() - SEASONAL_PERIOD - 2;
+            prediction = minimizationOfError(data, cases);
+        }
 
         for (Map.Entry<String, List<Integer>> stringIntegerEntry : prediction.entrySet()) {
             synchronized (data.getPredictionNewCases()) {
@@ -57,7 +70,22 @@ public class ExponentialSmoothing {
         if (deaths == null || deaths.size() == 0) {
             return;
         }
-        Map<String, List<Integer>> prediction = minimizationOfError(data, deaths);
+
+        TreeMap<String, Integer> nonZeroCases = new TreeMap<>(data.dateComparator());
+        TreeMap<String, Integer> sortedCasesByDate = sortCasesByDate(data, deaths);
+
+        ExponentialSmoothingWeekly weekly = new ExponentialSmoothingWeekly();
+
+        if(!(weekly.checkWeekSeasonality(deaths))) {
+            weekly.fillInNonZeroCases(sortedCasesByDate, nonZeroCases);
+        }
+        Map<String, List<Integer>> prediction;
+        if(nonZeroCases.size() > 0) {
+            prediction = weekly.minimizationOfError(data, nonZeroCases);
+        } else {
+            EXISTED_PERIOD_AFTER_SEASONAL = deaths.size() - SEASONAL_PERIOD - 2;
+            prediction = minimizationOfError(data, deaths);
+        }
 
         for (Map.Entry<String, List<Integer>> stringIntegerEntry : prediction.entrySet()) {
             synchronized (data.getPredictionNewDeaths()) {
@@ -216,11 +244,11 @@ public class ExponentialSmoothing {
         return predictionsFuture;
     }
 
-    private Integer lowBound(Integer predictedCases) {
+    Integer lowBound(Integer predictedCases) {
         return Math.max(predictedCases - (int) (error + error / 1.96), 0);
     }
 
-    private Integer highBound(Integer predictedCases) {
+    Integer highBound(Integer predictedCases) {
         return predictedCases + (int) (error + error / 1.96);
     }
 
@@ -298,7 +326,7 @@ public class ExponentialSmoothing {
         return list;
     }
 
-    private void boundsSmoothing(List<Double> constants) {
+    void boundsSmoothing(List<Double> constants) {
         if (constants.get(0) > 0.99) {
             constants.set(0, 0.99);
         }
@@ -320,14 +348,14 @@ public class ExponentialSmoothing {
         }
     }
 
-    private TreeMap<String, Integer> sortCasesByDate(Data data, Map<String, Integer> cases) {
+    TreeMap<String, Integer> sortCasesByDate(Data data, Map<String, Integer> cases) {
         TreeMap<String, Integer> sortedCasesByDate = new TreeMap<>(data.dateComparator());
         sortedCasesByDate.putAll(cases);
 
         return sortedCasesByDate;
     }
 
-    private double RMSE(Data data, Map<String, Integer> cases, Map<String, Integer> predictions) {
+    double RMSE(Data data, Map<String, Integer> cases, Map<String, Integer> predictions) {
 
         Map<String, Integer> sortedMap = new TreeMap<>(data.dateComparator());
         Map<String, Integer> withoutSeasonalPeriod = new TreeMap<>(data.dateComparator());

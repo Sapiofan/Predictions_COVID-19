@@ -132,7 +132,9 @@ public class FileHandlerServiceImpl implements FileHandlerService {
     @Override
     public void writeToCSV(Data data) {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+        String lastDay = data.getNewCases().entrySet().stream().findFirst().get().getKey();
         for (Map.Entry<String, Map<String, Integer>> stringMapEntry : data.getNewCases().entrySet()) {
+            lastDay = Utils.dateBefore(lastDay, stringMapEntry.getKey(), formatter) ? stringMapEntry.getKey() : lastDay;
             executor.execute(() -> {
                 try (CSVWriter writer = new CSVWriter(new FileWriter(RESOURCES + PREDICTIONS_FOLDER
                         + stringMapEntry.getKey()))) {
@@ -146,6 +148,37 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                                     String.valueOf(data.getConfirmedCases().get(stringMapEntry.getKey()).get(entry.getKey())),
                                     String.valueOf(data.getDeaths().get(stringMapEntry.getKey()).get(entry.getKey()))})
                             .forEach(csvData::add);
+                    Map<String, Integer> map = data.getPredictionConfirmedDeaths().get(stringMapEntry.getKey());
+                    if(map != null) {
+                        for (Map.Entry<String, Integer> value : map.entrySet()) {
+                            if(!stringMapEntry.getValue().containsKey(value.getKey()) && value.getValue() != null) {
+                                csvData.add(new String[]{
+                                        value.getKey(),
+                                        String.valueOf(data.getPredictionNewCases()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(0)),
+                                        String.valueOf(data.getPredictionNewDeaths()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(0)),
+                                        String.valueOf(value.getValue()),
+                                        String.valueOf(data.getPredictionConfirmedDeaths()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey())),
+                                        String.valueOf(data.getPredictionNewCases()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(1)),
+                                        String.valueOf(data.getPredictionNewCases()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(2)),
+                                        String.valueOf(data.getPredictionNewDeaths()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(1)),
+                                        String.valueOf(data.getPredictionNewDeaths()
+                                                .get(stringMapEntry.getKey())
+                                                .get(value.getKey()).get(2))});
+                            }
+                        }
+                    }
                     writer.writeAll(csvData);
                 } catch (IOException e) {
                     log.error("Error while writing data to CSV file: " + e);
@@ -154,13 +187,19 @@ public class FileHandlerServiceImpl implements FileHandlerService {
         }
 
         for (Map.Entry<String, Map<String, List<Integer>>> stringMapEntry : data.getPredictionNewCases().entrySet()) {
+            if(Utils.dateBefore(stringMapEntry.getKey(), lastDay, formatter)
+                    || Utils.datesEquals(stringMapEntry.getKey(), lastDay, formatter)) {
+                continue;
+            }
             executor.execute(() -> {
                 try (CSVWriter writer = new CSVWriter(new FileWriter(RESOURCES + PREDICTIONS_FOLDER
                         + stringMapEntry.getKey()))) {
                     List<String[]> csvData = new ArrayList<>();
                     csvData.add(new String[]{"Country", "Cases", "Deaths", "Confirmed cases", "Confirmed deaths",
                             "Low bound cases", "High bound cases", "Low bound deaths", "High bound deaths"});
-                    stringMapEntry.getValue().entrySet().stream().map(stringIntegerEntry -> new String[]{
+                    for (Map.Entry<String, List<Integer>> stringIntegerEntry : stringMapEntry.getValue().entrySet()) {
+                        try {
+                            String[] strings = new String[]{
                                     stringIntegerEntry.getKey(),
                                     String.valueOf(stringIntegerEntry.getValue().get(0)),
                                     String.valueOf(data.getPredictionNewDeaths()
@@ -179,8 +218,12 @@ public class FileHandlerServiceImpl implements FileHandlerService {
                                             .get(stringIntegerEntry.getKey()).get(1)),
                                     String.valueOf(data.getPredictionNewDeaths()
                                             .get(stringMapEntry.getKey())
-                                            .get(stringIntegerEntry.getKey()).get(2))})
-                            .forEach(csvData::add);
+                                            .get(stringIntegerEntry.getKey()).get(2))};
+                            csvData.add(strings);
+                        } catch (NullPointerException e) {
+
+                        }
+                    }
                     writer.writeAll(csvData);
                 } catch (IOException e) {
                     log.error("Error while writing data to CSV file: " + e);

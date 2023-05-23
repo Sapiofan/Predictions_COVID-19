@@ -1,5 +1,8 @@
 package com.sapiofan.predictions.entities;
 
+import java.util.List;
+import java.util.Map;
+
 public class WorldDataHandler {
 
     private final WorldData worldData;
@@ -53,7 +56,13 @@ public class WorldDataHandler {
     }
 
     public String getLastExistedDate() {
-        return worldData.existedConfirmedCases().lastEntry().getKey();
+        final String[] lastDay = new String[1];
+        worldData.existedConfirmedCases().entrySet()
+                .stream()
+                .takeWhile(stringMapEntry -> stringMapEntry.getValue().values()
+                        .stream().findFirst().get().size() <= 1)
+                .forEach(stringMapEntry -> lastDay[0] = stringMapEntry.getKey());
+        return lastDay[0];
     }
 
     public String getLastDate() {

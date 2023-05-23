@@ -31,4 +31,18 @@ public class Utils {
 
         return lastDate.isEqual(day);
     }
+
+    public static boolean dateBefore(String date1, String date2, DateTimeFormatter formatter) {
+        LocalDate parsedDate1 = LocalDate.parse(date1.substring(0, date1.indexOf(".")), formatter);
+        LocalDate parsedDate2 = LocalDate.parse(date2.substring(0, date2.indexOf(".")), formatter);
+
+        return parsedDate1.isBefore(parsedDate2);
+    }
+
+    public static boolean datesEquals(String date1, String date2, DateTimeFormatter formatter) {
+        LocalDate parsedDate1 = LocalDate.parse(date1.substring(0, date1.indexOf(".")), formatter);
+        LocalDate parsedDate2 = LocalDate.parse(date2.substring(0, date2.indexOf(".")), formatter);
+
+        return parsedDate1.isEqual(parsedDate2);
+    }
 }

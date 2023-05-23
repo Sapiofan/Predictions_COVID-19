@@ -1,5 +1,8 @@
 package com.sapiofan.predictions.entities;
 
+import java.util.List;
+import java.util.Map;
+
 public class CountryDataHandler {
 
     private final CountryData countryData;
@@ -25,7 +28,14 @@ public class CountryDataHandler {
     }
 
     public String getLastExistedDate() {
-        return countryData.existedCountryCases().lastEntry().getKey();
+        String lastDay = "";
+        for (Map.Entry<String, List<Integer>> stringListEntry : countryData.existedCountryCases().entrySet()) {
+            if(stringListEntry.getValue().size() > 1) {
+                break;
+            }
+            lastDay = stringListEntry.getKey();
+        }
+        return lastDay;
     }
 
     public String getLastDate() {
